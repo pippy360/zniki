@@ -2,6 +2,8 @@ import postDatabase
 import threadDatabase
 import boardDatabase
 
+threadsPerPage = 8
+
 def createBoard(name):
 	boardDatabase.incrementBoardCount()
 	boardId = boardDatabase.getBoardCount()
@@ -29,7 +31,7 @@ def createPost(boardId, threadId, message, attachedFileId=None, creatorId=None):
 def getPagePreview(boardId, page):
 	board = boardDatabase.getBoardInfo(boardId)
 	board['threads'] = [] 
-	threadIdList = boardDatabase.getBoardThreadListRange(boardId, 0, 4)
+	threadIdList = boardDatabase.getBoardThreadListRange(boardId, (page-1)*(threadsPerPage), (page)*(threadsPerPage))
 	for threadId in threadIdList:
 		board['threads'].append(getThreadPreview(boardId, threadId))
 

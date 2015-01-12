@@ -12,6 +12,19 @@ postRedisDB.flushall()
 boardId = databaseFunctions.createBoard("New Board Test")
 
 threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
 
 databaseFunctions.createPost(boardId, threadId, "Eating something")
 databaseFunctions.createPost(boardId, threadId, "This is post 1")
@@ -81,13 +94,12 @@ def showIndex():
 	page = databaseFunctions.getPagePreview(boardId, 1)
 	return render_template("index.html", page=page)
 
-@app.route("/thread/<threadId>")
-@app.route("/thread/<threadId>/")
-def showThread(threadId):
-	thread = databaseFunctions.getThread(boardId, threadId)
-	return render_template("thread.html", thread=thread, threadId=threadId)
+@app.route("/page/<pageNo>")
+def showPage(pageNo):
+	page = databaseFunctions.getPagePreview(boardId, int(pageNo))
+	return render_template("index.html", page=page)
 
-@app.route("/<threadId>/post", methods=['POST'])
+@app.route("/thread/<threadId>/post", methods=['POST'])
 def post(threadId):
 	#make sure the threadId exists
 	#submit the post
@@ -97,6 +109,11 @@ def post(threadId):
 	else:
 		return redirect('/thread/'+threadId)
 
+@app.route("/thread/<threadId>")
+@app.route("/thread/<threadId>/")
+def showThread(threadId):
+	thread = databaseFunctions.getThread(boardId, threadId)
+	return render_template("thread.html", thread=thread, threadId=threadId)
 
 @app.route('/threadSubmit', methods=['POST'])
 def login():
