@@ -49,7 +49,7 @@ def moveThreadToFront(boardId, threadId):
 	key = _boardKey(boardId)
 	atom = boardRedisDB.pipeline()
 	atom.lrem(key+'_threadList', 1, threadId)
-	atom.rpush(key+'_threadList', threadId)
+	atom.lpush(key+'_threadList', threadId)
 	atom.execute()
 
 def _boardKey(boardId):

@@ -14,7 +14,7 @@ def addNewThread(boardId, threadId, subject):
 
 def addPostIdToPostList(boardId, threadId, postId):
 	key = _threadKey(boardId, threadId)
-	threadRedisDB.rpush( key+'_postList', postId )
+	threadRedisDB.lpush( key+'_postList', postId )
 
 def incrementThreadPostCount(boardId, threadId):
 	key = _threadKey(boardId, threadId)
