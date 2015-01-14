@@ -76,33 +76,27 @@ databaseFunctions.createPost(boardId, threadId, "This is post 3")
 databaseFunctions.createPost(boardId, threadId, "This is post 4")
 databaseFunctions.createPost(boardId, threadId, "This is post 5")
 
-
-#
-#
-#
-#
-#todo: define which side to always use, lpush or rpush !!!
-#
-#
-#
-
 @app.route("/")
 @app.route("/home")
 @app.route("/home/")
 @app.route("/index.html")
 def showIndex():
-	page = databaseFunctions.getPagePreview(boardId, 1)
-	return render_template("index.html", page=page)
+	return showPage(1)
 
 @app.route("/page/<pageNo>")
+@app.route("/page/<pageNo>/")
 def showPage(pageNo):
+	pageNo = str(pageNo)
+	if int(pageNo) < 0:
+		return render_template("baseLayout.html", 
+			errors=[{'message':'bad page number !','class':'bg-danger'}])
+
 	page = databaseFunctions.getPagePreview(boardId, int(pageNo))
-	return render_template("index.html", page=page)
+	return render_template("index.html", page=page, 
+		pageButtons=databaseFunctions.genPageButtons(boardId, pageNo))
 
 @app.route("/thread/<threadId>/post", methods=['POST'])
 def post(threadId):
-	#make sure the threadId exists
-	#submit the post
 	if request.form.get('postContent'):
 		databaseFunctions.createPost(boardId, threadId, request.form.get('postContent'))
 		return redirect('/thread/'+threadId)
@@ -113,17 +107,22 @@ def post(threadId):
 @app.route("/thread/<threadId>/")
 def showThread(threadId):
 	thread = databaseFunctions.getThread(boardId, threadId)
-	return render_template("thread.html", thread=thread, threadId=threadId)
+	boardName = databaseFunctions.getBoardName(boardId)
+	return render_template("thread.html", boardName=boardName, thread=thread, threadId=threadId)
 
 @app.route('/threadSubmit', methods=['POST'])
 def login():
-	print 'request.request'
 	threadId = ''
 	if request.form.get('subject') != None and request.form.get('comment') != None:
 		threadId = databaseFunctions.createThread(boardId, request.form['subject'], request.form['comment'], "file_001")
 		return redirect('/thread/'+threadId)
 	else:
 		return redirect('/')#pass it here and pass on an error message
+
+#TODO: remove
+@app.route('/baseLayoutTest')
+def baseTest():
+	return render_template("baseLayout.html",errors=[{'message':'something here', 'class':'bg-danger'}])
 
 
 if __name__ == "__main__":

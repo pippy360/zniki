@@ -2,7 +2,7 @@ import postDatabase
 import threadDatabase
 import boardDatabase
 
-threadsPerPage = 8
+threadsPerPage = 5
 
 def createBoard(name):
 	boardDatabase.incrementBoardCount()
@@ -11,8 +11,10 @@ def createBoard(name):
 	return boardId
 
 def createThread(boardId, subject, message, attachedFileId, creatorId=None):
-	threadId = boardDatabase.incrementBoardThreadCount(boardId)#TODO: replace with get threadId()
-	threadId = boardDatabase.getBoardThreadCount(boardId)#TODO: replace with get threadId()
+	#TODO: replace with get threadId()
+	threadId = boardDatabase.incrementBoardThreadCount(boardId)
+	#TODO: replace with get threadId()
+	threadId = str(boardDatabase.getBoardThreadCount(boardId))
 	threadDatabase.addNewThread(boardId, threadId, subject)
 	boardDatabase.addThreadIdToThreadList(boardId, threadId)
 	firstPostId = createPost(boardId, threadId, message, attachedFileId, creatorId)
@@ -28,14 +30,33 @@ def createPost(boardId, threadId, message, attachedFileId=None, creatorId=None):
 	boardDatabase.moveThreadToFront(boardId, threadId)
 	return postId
 
-def getPagePreview(boardId, page):
+#FIXME: this function should not be in the databaseFunctions, it's a frontend thing
+def genPageButtons(boardId, pageNo):
+	#see how many buttons there shoud be and active the active one !
+	#calc the number of pages !!!
+	threadsNo = boardDatabase.getBoardThreadCount(boardId)
+	pages = (threadsNo/threadsPerPage)+1;
+	result = []
+	for x in range(pages):
+		if int(x+1) == int(pageNo):
+			result.append({'number':str(x+1), 'active':str(True) })
+		else:
+			result.append({'number':str(x+1), 'active':str(False)})
+	return result
+
+#FIXME: this function should MAYBE not be in the databaseFunctions, it's a frontend thing
+def getPagePreview(boardId, pageNo):
 	board = boardDatabase.getBoardInfo(boardId)
 	board['threads'] = [] 
-	threadIdList = boardDatabase.getBoardThreadListRange(boardId, (page-1)*(threadsPerPage), (page)*(threadsPerPage))
+	threadIdList = boardDatabase.getBoardThreadListRange(boardId, 
+		(pageNo-1)*(threadsPerPage), (pageNo)*(threadsPerPage)-1)
 	for threadId in threadIdList:
 		board['threads'].append(getThreadPreview(boardId, threadId))
 
 	return board
+
+def getBoardName(boardId):
+	return boardDatabase.getBoardName(boardId)
 
 def getThread(boardId, threadId):
 	thread = threadDatabase.getThreadInfo(boardId, threadId)

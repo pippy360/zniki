@@ -28,7 +28,11 @@ def incrementBoardThreadCount(boardId):
 
 def getBoardThreadCount(boardId):
 	key = _boardKey(boardId)
-	return boardRedisDB.hget(key+'_info', 'threadCount')
+	return int(boardRedisDB.hget(key+'_info', 'threadCount'))
+
+def getBoardName(boardId):
+	key = _boardKey(boardId)
+	return boardRedisDB.hget(key+'_info','name')
 
 def getBoardInfo(boardId):
 	key = _boardKey(boardId)
@@ -39,10 +43,6 @@ def getBoardThreadListAll(boardId):
 
 def getBoardThreadListRange(boardId, start, end):
 	key = _boardKey(boardId)
-	print "here"
-	print _boardKey(boardId)
-	print boardRedisDB.lrange(key+'_threadList', start, end)
-	print "/here"
 	return boardRedisDB.lrange(key+'_threadList', start, end)
 
 def moveThreadToFront(boardId, threadId):

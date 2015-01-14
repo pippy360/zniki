@@ -1,53 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Test - {{ thread['subject'] }}</title>
-    <link href="/static/style.css" rel="stylesheet">
-  </head>
-  <body>
-    <header class="header">
-      <div class="">
-        <span class="boardTitle">{{ thread['subject'] }}</span>
+{% extends "baseLayout.html" %}
+
+{% block topLink %}
+<a href='/' class="topbarLink"> {{boardName}}</a>  > <a href='/thread/{{ thread['threadId'] }}' class="topbarLink"> Thread {{ thread['threadId'] }} </a>
+{% endblock %}
+
+{% block head %}
+    <link href="/static/threadStyle.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+
+<div class="formWrapper">
+  <span class="formsTitle">Add Post</span>
+  <div class="newThreadForm">
+    <form action="/thread/{{threadId}}/post" method="post">
+      <span class="threadSubTitle">comment</span>
+      <textarea name="postContent" class=""></textarea>
+      <input class="submitButton" type="submit">
+    </form>
+  </div>
+</div>
+<div class="threadsWrapper">
+  <div class="thread">
+    <div class="threadFirstPost clearfix">
+      <div class="threadFirstPostImageWrapper clearfix">
+        <img src="http://dummyimage.com/150">
       </div>
-    </header>
-    <div class="formWrapper">
-      <span class="formsTitle">Add Post</span>
-      <div class="newThreadForm">
-        <form action="/thread/{{threadId}}/post" method="post">
-          <span class="threadSubTitle">comment</span>
-          <textarea name="postContent" class=""></textarea>
-          <input class="submitButton" type="submit">
-        </form>
+      <div class="threadFirstPostRight clearfix">
+        <div class="threadFirstPostTitle">
+          <span class="threadTitle">{{ thread['subject'] }}</span> - Thread id: {{ thread['threadId'] }} - <a href="/thread/{{ thread['threadId'] }}">Open Thread</a>
+        </div>
+        <div class="threadFirstPostMessage">
+          {{ thread['posts'][0].message }}
+        </div>
       </div>
     </div>
-  <div class="threadsWrapper">
-      <div class="thread">
-        <div class="threadFirstPost clearfix">
-          <div class="threadFirstPostImageWrapper clearfix">
-            <img src="http://dummyimage.com/150">
-          </div>
-          <div class="threadFirstPostRight clearfix">
-            <div class="threadFirstPostTitle">
-              <span class="threadTitle">{{ thread['subject'] }}</span> - Thread id: {{ thread['threadId'] }} - <a href="/thread/{{ thread['threadId'] }}">Open Thread</a>
-            </div>
-            <div class="threadFirstPostMessage">
-              {{ thread['posts'][0].message }}
-            </div>
+    {% for post in thread['posts'] %}
+      {% if post != thread['posts'][0] %}
+        <div class="postWrapper">
+          <div class="post">
+              {{ post.message }}
           </div>
         </div>
-        {% for post in thread['posts'] %}
-          {% if post != thread['posts'][0] %}
-            <div class="postWrapper">
-              <div class="post">
-                  {{ post.message }}
-              </div>
-            </div>
-          {% endif %}
-        {% endfor %}
-      </div><!--/thread-->
-  </div><!--/threadsWrapper--> 
-  </body>
-</html>
+      {% endif %}
+    {% endfor %}
+  </div><!--/thread-->
+</div><!--/threadsWrapper--> 
+{% endblock %}

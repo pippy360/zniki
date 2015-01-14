@@ -1,26 +1,6 @@
-body, html{
-  margin: 0;
-  padding: 0;
-  background-color: #f9f9f9;
-  font-family: "RobotoDraft","Roboto",sans-serif;
-}
-a{
-  color: #337ab7;
-  text-decoration: none;
-}
-a:hover{
-  color: #23527c;
-  text-decoration: underline;
-}
-.header{
-  background-color: #00bcd4;
-  color: white;
-  font-size: 24px;
-  line-height: 64px;
-  padding-left: 20px;
-}
 .threadsWrapper{
   padding-top: 80px;
+  padding-bottom: 100px;
 }
 .thread{
   margin: 15px;
@@ -63,15 +43,11 @@ a:hover{
   padding: 20px;
   background-color: rgba(200,200,200,.3);
 }
-
-
-
 .formWrapper{
   width: 400px;
   display: block;
   margin: auto;
   margin-top: 60px;
-  
 }
 .formsTitle{
   font-size: 22px;
@@ -93,7 +69,6 @@ a:hover{
   font-size: 20px;
   height: 100px;
 }
-
 .newThreadForm .submitButton{
   border-radius: 2px;
   font-size: 20px;

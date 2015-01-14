@@ -1,0 +1,34 @@
+ul{
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+}
+li{
+
+}
+.pageNumbersWrapper{
+	margin: auto;
+  	display: inline-block;
+  	width: auto;
+  	text-align: center;
+}
+.pageNumbers{
+	display: inline;
+	height: 100px;
+	margin: auto;
+}
+.pageNumber{
+	float: left;
+	display: inline-block;
+}
+.pageNumber a{
+	padding: 5px;
+	cursor: pointer;
+}
+.pageNumber a.active{
+	color: black;
+}
+.pageNumbersCenterHack{
+  text-align: center;
+  width: 100%;
+}
