@@ -18,9 +18,10 @@
 <div class="formWrapper">
   <span class="formsTitle">Create New Thread</span>
   <div class="newThreadForm">
-    <form action="/threadSubmit" method="post">
+    <form action="/threadSubmit" method="post" enctype="multipart/form-data">
       <span class="threadSubTitle">subject</span>
       <input name="subject" class="input" />
+      <input name="photo" type="file">
       <span class="threadSubTitle">comment</span>
       <textarea name="comment" class=""></textarea>
       <input class="submitButton" type="submit">

@@ -1,6 +1,7 @@
 import postDatabase
 import threadDatabase
 import boardDatabase
+import fileDatabase
 
 threadsPerPage = 5
 
@@ -43,6 +44,9 @@ def genPageButtons(boardId, pageNo):
 		else:
 			result.append({'number':str(x+1), 'active':str(False)})
 	return result
+
+def addFileToDatabase(boardId, threadId, postId, fileInfo, creatorIP):
+	return fileDatabase.addFile(boardId, threadId, postId, postId, fileInfo, creatorIP)
 
 #FIXME: this function should MAYBE not be in the databaseFunctions, it's a frontend thing
 def getPagePreview(boardId, pageNo):

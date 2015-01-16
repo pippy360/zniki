@@ -1,5 +1,6 @@
 from database import databaseFunctions
 import redis
+import filesAPI
 from flask import Flask, render_template, request, send_file, redirect, url_for
 app = Flask(__name__)
 
@@ -114,7 +115,8 @@ def showThread(threadId):
 def login():
 	threadId = ''
 	if request.form.get('subject') != None and request.form.get('comment') != None:
-		threadId = databaseFunctions.createThread(boardId, request.form['subject'], request.form['comment'], "file_001")
+		threadId = databaseFunctions.createThread(boardId, request.form['subject'], 
+			request.form['comment'], request)
 		return redirect('/thread/'+threadId)
 	else:
 		return redirect('/')#pass it here and pass on an error message
