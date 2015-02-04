@@ -1,7 +1,7 @@
 {% extends "baseLayout.html" %}
 
 {% block topLink %}
-  <a href='/' class="topbarLink"> {{ page['name'] }}</a>
+  <a href='/' class="topbarLink"> Home</a>
 {% endblock %}
 
 {% block head %}
@@ -11,48 +11,56 @@
 .threadsWrapper{
   padding-bottom: 0px;
 }
+.recentUploadedProjectsSpan{
+  font-size: 25px;
+  padding-left: 60px;
+  color: rgb(60, 60, 60);
+}
+.selectionList{
+  padding: 10px; 
+  padding-left: 70px;
+  padding-bottom: 40px;
+}
+.selectionList li{
+  padding: 10px; 
+  list-style-type: circle;
+}
     </style>
-{% endblock %}
+{% endblock %} 
 
 {% block content %}
-<div class="formWrapper">
-  <span class="formsTitle">Create New Thread</span>
-  <div class="newThreadForm">
-    <form action="/threadSubmit" method="post" enctype="multipart/form-data">
-      <span class="threadSubTitle">subject</span>
-      <input name="subject" class="input" />
-      <input name="photo" type="file">
-      <span class="threadSubTitle">comment</span>
-      <textarea name="comment" class=""></textarea>
-      <input class="submitButton" type="submit">
-    </form>
-  </div>
+<div>
+<span class="recentUploadedProjectsSpan">Welcome:</span>
+<ul class="selectionList">
+  <li><a href="/newProject">Add a new project</a></li>
+  <li><a href="/all">View all projects</a></li>
+</ul>
 </div>
+
+<span class="recentUploadedProjectsSpan">Recently Uploaded Projects:</span>
 <div class="threadsWrapper">
-{% for thread in page['threads'] %}
+{% for project in recentProjects %}
   <div class="thread">
     <div class="threadFirstPost clearfix">
       <div class="threadFirstPostImageWrapper clearfix">
-        <img src="http://dummyimage.com/150">
+        <img class="clearfix" src="https://unsplash.it/200/200/?random&nocache={{project['projectId']}}">
       </div>
       <div class="threadFirstPostRight clearfix">
         <div class="threadFirstPostTitle">
-          <span class="threadTitle">{{ thread['subject'] }}</span> - Thread id: {{ thread['threadId'] }} - <a href="/thread/{{ thread['threadId'] }}">Open Thread</a>
+          <span class="threadTitle"><a href="/r/{{ project['projectId'] }}">{{ project['title'] }}</a></span>
         </div>
         <div class="threadFirstPostMessage">
-          {{ thread['posts'][0].message }}
+          {{ project['shortDescription'] }}
+          <div class="threadKeyWords">Github: <a href="{{project['gitUrl']}}">{{project['gitUrl']}}</a></div>
+          <div class="threadKeyWords">Wiki: <a href="{{project['gitUrl']}}">{{project['wikiUrl']}}</a></div>
+          <div class="threadKeyWords">Tags: 
+            {% for tag in project['tags'] %}
+              <a href="/s/{{tag}}">{{tag}}</a>,
+            {% endfor %}
+          </div>
         </div>
       </div>
     </div>
-    {% for post in thread['posts'] %}
-      {%- if post != thread['posts'][0] -%}
-        <div class="postWrapper">
-          <div class="post">
-              {{ post.message }}
-          </div>
-        </div>
-      {% endif %}
-    {% endfor %}
   </div><!--/thread-->
 {% endfor %}
 <div class="pageNumbersCenterHack">

@@ -21,12 +21,48 @@ a.topbarLink:hover{
 	text-decoration: underline;
 }
 .header{
-  background-color: #00bcd4;
+  background-color: #2196F3;
   color: white;
   font-size: 24px;
   line-height: 64px;
   padding-left: 20px;
   margin-bottom: 70px;
+}
+.searchBarWrapper{
+	display: inline-block;
+	margin: 0;
+	margin-left: 100px;
+}
+.searchBarWrapper .searchInput{
+	padding: 5px;
+	width: 400px;
+	font-size: 18px;
+	margin: 0;
+	border: 0px;
+}
+.searchBarWrapper .searchButton{
+	font-size: 18px;
+	margin: 0;
+	padding: 5px;
+	border: 0;
+	background-color: white;
+	color: black;
+	cursor: pointer;
+}
+.rightHeaderArea{
+	float: right;
+	margin-right: 30px;
+}
+.rightHeaderArea .userIconWrapper{
+	padding: 5px;
+}
+.userNameLink{
+	color: white;
+	text-decoration: none;
+}
+.userNameLink:hover{
+	color: white;
+	text-decoration: underline;
 }
 .errorWrapper{
 	display: block;
