@@ -5,31 +5,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Test Page</title>
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
     <link href="/static/baseLayout.css" rel="stylesheet">
     {% block head %}{% endblock %}
   </head>
   <body>
     <header class="header">
-      <span class="">
+      <div class="">
         <span class="boardTitle">{% block topLink %}{% endblock %}</span>
-      </span>
-      <span class="searchBarWrapper">
-        <form action="/searchForm" method="get">
-          <input class="searchInput" name="q" />
-          <input class="searchButton" value="Search" type="submit" />
-        </form>
-      </span>
-      <span class="rightHeaderArea">
-        <a class="userNameLink" href="/user/{{userId}}">
-          <span class="userInfoAreaWrapper">
-            <span class="userIconWrapper">
-              <i class="fa fa-user"></i><!--
-            --></span><!--
-            --><span>Bobbyxoxo</span>
-          </span>
-        </a>
-      </span>
+      </div>
     </header>
     <div class="errorWrapper">
       {% for error in errors %}

@@ -5,20 +5,40 @@ from flask import Flask, render_template, request, send_file, redirect, url_for
 app = Flask(__name__)
 
 
+
 postRedisDB = redis.StrictRedis( '127.0.0.1', 6379 )
 postRedisDB.flushall()
 
-projectId = databaseFunctions.addNewProject("user_id_02", "Some Project About Something", 
-	"dicta sunt explicabo."+
-	" Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit"+
-	" aut fugit, sed quia consequuntur magni dolores eos qui ratione"+
-	" voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem"+
-	" illum qui dolorem eum fugiat quo voluptas nulla pariatur?", "",
-	 "http://github.com/something", "http://wiki.com/somethingElse", 
-	 "file_id_001", [ "something", "cats", "nothing", "Ireland", "vague" ])
 
-projectId = databaseFunctions.addNewProject("user_id_02", "A big long project", 
-	"dicta sunt explicabo."+
+boardId = databaseFunctions.createBoard("New Board Test")
+
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+
+databaseFunctions.createPost(boardId, threadId, "Eating something")
+databaseFunctions.createPost(boardId, threadId, "This is post 1")
+databaseFunctions.createPost(boardId, threadId, "This is post 2")
+databaseFunctions.createPost(boardId, threadId, "This is post 3")
+databaseFunctions.createPost(boardId, threadId, "This is post 4")
+databaseFunctions.createPost(boardId, threadId, "This is post 5")
+databaseFunctions.createPost(boardId, threadId, "Sed ut perspiciatis "+
+	"unde omnis iste natus error sit voluptatem accusantium doloremque laudantium")
+databaseFunctions.createPost(boardId, threadId, " totam rem aperiam, "+
+	"eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae")
+databaseFunctions.createPost(boardId, threadId, "Something fruit")
+databaseFunctions.createPost(boardId, threadId, "dicta sunt explicabo."+
 	" Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit"+
 	" aut fugit, sed quia consequuntur magni dolores eos qui ratione"+
 	" voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem"+
@@ -28,79 +48,71 @@ projectId = databaseFunctions.addNewProject("user_id_02", "A big long project",
 	" exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid"+
 	" ex ea commodi consequatur? Quis autem vel eum iure reprehenderit "+
 	"qui in ea voluptate velit esse quam nihil molestiae consequatur, vel"+
-	" illum qui dolorem eum fugiat quo voluptas nulla pariatur?", "",
-	 "http://github.com/something", "http://wiki.com/somethingElse", 
-	 "file_id_001", [ "Ireland", "USA", "london" ])
+	" illum qui dolorem eum fugiat quo voluptas nulla pariatur?")
 
-projectId = databaseFunctions.addNewProject("user_id_02", "Cat Chat", 
-	"Are you thinking of adopting a rescued cat or kitten? Perhaps you are looking "
-	+"for a friendly family cat or a loving"
-	+" feline companion? Could you offer a caring "
-	+"home to a kitten or two, or a rural home for "
-	+"neutered feral cats? There are thousands of cats and "
-	+"kittens of all ages, types and personalities needing homes, "
-	+"in rescue centres throughout the UK and Ireland", "",
-	 "http://github.com/something", "http://wiki.com/somethingElse", 
-	 "file_id_001", [ "cats", "chat", "mice", "Ireland" ])
+threadId = databaseFunctions.createThread(boardId, "Thread about cheese", "hey check out my new thread hey check out my new threadhey check out my new threadhey check out my new thread", "file_001")
+
+databaseFunctions.createPost(boardId, threadId, "This man is "+
+	"making something. He has that ability. It's got style and personality. I love it.")
+databaseFunctions.createPost(boardId, threadId, "This is post 2")
+databaseFunctions.createPost(boardId, threadId, "This is post 3")
+databaseFunctions.createPost(boardId, threadId, "This is post 4")
+databaseFunctions.createPost(boardId, threadId, "something here to test")
 
 
-AMOUNT_OF_MOST_RECENT = 15#the amount of most recent projects to show on the index page
-AMOUNT_OF_PROJECTS_PER_SEARCH_PAGE = 15
+threadId = databaseFunctions.createThread(boardId, "School books", "hey check out my new thread 324", "file_001")
+
+databaseFunctions.createPost(boardId, threadId, "This is post 1")
+databaseFunctions.createPost(boardId, threadId, "This is post 2")
+databaseFunctions.createPost(boardId, threadId, "This is post 3")
+databaseFunctions.createPost(boardId, threadId, "This is post 4")
+databaseFunctions.createPost(boardId, threadId, "This is post 5")
+
+
+threadId = databaseFunctions.createThread(boardId, "subject", "hey check out my new thread sdf", "file_001")
+
+databaseFunctions.createPost(boardId, threadId, "This is post 1")
+databaseFunctions.createPost(boardId, threadId, "This is post 2")
+databaseFunctions.createPost(boardId, threadId, "This is post 3")
+databaseFunctions.createPost(boardId, threadId, "This is post 4")
+databaseFunctions.createPost(boardId, threadId, "This is post 5")
+
 @app.route("/")
 @app.route("/home")
 @app.route("/home/")
 @app.route("/index.html")
 def showIndex():
-	recentProjectsIds = databaseFunctions.getProjectListRange(0, AMOUNT_OF_MOST_RECENT)
-	print 'recentProjectsIds'
-	print recentProjectsIds
-	recentProjects = []
-	for projectId in recentProjectsIds:
-		recentProjects.append( databaseFunctions.getProjectInfo(projectId) )
+	return showPage(1)
 
-	print 'recentProjects'
-	print recentProjects
-	return render_template("index.html", recentProjects=recentProjects)
-
-@app.route("/s/<query>")
-@app.route("/s/<query>/")
-def showSearch(query):
-	return showSearchPage(query, 0)
-
-@app.route("/s/<query>/<pageNo>")
-@app.route("/s/<query>/<pageNo>/")
-def showSearchPage(query, pageNo):
+@app.route("/page/<pageNo>")
+@app.route("/page/<pageNo>/")
+def showPage(pageNo):
 	pageNo = str(pageNo)
 	if int(pageNo) < 0:
 		return render_template("baseLayout.html", 
 			errors=[{'message':'bad page number !','class':'bg-danger'}])
 
-	#get the query
-	tags = query.split()
-	
-	#//get the results with the tags
-	#get the intersec of the query	
+	page = databaseFunctions.getPagePreview(boardId, int(pageNo))
+	return render_template("index.html", page=page, 
+		pageButtons=databaseFunctions.genPageButtons(boardId, pageNo))
 
-	genPageButtons(1,0)
-	
-	return render_template("search.html")
-
-@app.route("/r/<projectId>")
-@app.route("/r/<projectId>/")
-def showProj(projectId):
-	return showIndex()
-	#return render_template("index.html")
-
-#TODO: allow editing of projects
-@app.route("/r/<projectId>/edit", methods=['POST'])
-def editProj(projectId):
+@app.route("/thread/<threadId>/post", methods=['POST'])
+def post(threadId):
 	if request.form.get('postContent'):
-		pass
+		databaseFunctions.createPost(boardId, threadId, request.form.get('postContent'))
+		return redirect('/thread/'+threadId)
 	else:
-		pass
+		return redirect('/thread/'+threadId)
 
-@app.route('/projSubmit', methods=['POST'])
-def projSubmit():
+@app.route("/thread/<threadId>")
+@app.route("/thread/<threadId>/")
+def showThread(threadId):
+	thread = databaseFunctions.getThread(boardId, threadId)
+	boardName = databaseFunctions.getBoardName(boardId)
+	return render_template("thread.html", boardName=boardName, thread=thread, threadId=threadId)
+
+@app.route('/threadSubmit', methods=['POST'])
+def login():
 	threadId = ''
 	if request.form.get('subject') != None and request.form.get('comment') != None:
 		threadId = databaseFunctions.createThread(boardId, request.form['subject'], 
@@ -113,16 +125,6 @@ def projSubmit():
 @app.route('/baseLayoutTest')
 def baseTest():
 	return render_template("baseLayout.html",errors=[{'message':'something here', 'class':'bg-danger'}])
-
-def genPageButtons(resultsNo, pageNo):
-	pages = (resultsNo/AMOUNT_OF_PROJECTS_PER_SEARCH_PAGE)+1;
-	result = []
-	for x in range(pages):
-		if int(x+1) == int(pageNo):
-			result.append({'number':str(x+1), 'active':str(True) })
-		else:
-			result.append({'number':str(x+1), 'active':str(False)})
-	return result
 
 
 if __name__ == "__main__":
