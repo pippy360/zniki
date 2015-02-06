@@ -2,13 +2,16 @@ import redis
 
 keyFormat = 'board_{0}'
 boardRedisDB = redis.StrictRedis( '127.0.0.1', 6379 )#TODO: move to config file
-board_count_key = 'board_count'
 
-def getBoardCount():
-	return boardRedisDB.get(board_count_key)
-	
-def incrementBoardCount():
-	boardRedisDB.incr(board_count_key)
+board_post_key = "_post_count"
+
+def incrementBoardPostCount(boardId):
+	key = _boardKey(boardId)
+	boardRedisDB.incr(key+board_post_key)
+
+def getBoardPostCount(boardId):
+	key = _boardKey(boardId)
+	return boardRedisDB.get(key+board_post_key)
 
 def addBoard(boardId, name):
 	boardInfo = {
@@ -21,6 +24,13 @@ def addBoard(boardId, name):
 def addThreadIdToThreadList(boardId, threadId):
 	key = _boardKey(boardId)
 	boardRedisDB.lpush( key+'_threadList', threadId )
+
+def moveThreadToFront(boardId, threadId):
+	key = _boardKey(boardId)
+	atom = boardRedisDB.pipeline()
+	atom.lrem(key+'_threadList', 1, threadId)
+	atom.lpush(key+'_threadList', threadId)
+	atom.execute()
 
 def incrementBoardThreadCount(boardId):
 	key = _boardKey(boardId)
@@ -44,13 +54,6 @@ def getBoardThreadListAll(boardId):
 def getBoardThreadListRange(boardId, start, end):
 	key = _boardKey(boardId)
 	return boardRedisDB.lrange(key+'_threadList', start, end)
-
-def moveThreadToFront(boardId, threadId):
-	key = _boardKey(boardId)
-	atom = boardRedisDB.pipeline()
-	atom.lrem(key+'_threadList', 1, threadId)
-	atom.lpush(key+'_threadList', threadId)
-	atom.execute()
 
 def _boardKey(boardId):
 	return keyFormat.format(boardId)

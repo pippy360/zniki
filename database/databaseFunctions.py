@@ -2,32 +2,36 @@ import postDatabase
 import threadDatabase
 import boardDatabase
 import fileDatabase
+import globalDatabase
 
 threadsPerPage = 5
 
 def createBoard(name):
-	boardDatabase.incrementBoardCount()
-	boardId = boardDatabase.getBoardCount()
+	globalDatabase.incrementBoardCount()
+	boardId = globalDatabase.getBoardCount()
 	boardDatabase.addBoard(boardId, name)
 	return boardId
 
-def createThread(boardId, subject, message, attachedFileId, creatorId=None):
+#returns the id of the thread and the id of the OP's post
+def createThread(boardId, subject, message, attachedFileId, creatorIP=None, creatorId=None):
 	#TODO: replace with get threadId()
 	threadId = boardDatabase.incrementBoardThreadCount(boardId)
 	#TODO: replace with get threadId()
 	threadId = str(boardDatabase.getBoardThreadCount(boardId))
 	threadDatabase.addNewThread(boardId, threadId, subject)
 	boardDatabase.addThreadIdToThreadList(boardId, threadId)
-	firstPostId = createPost(boardId, threadId, message, attachedFileId, creatorId)
+	firstPostId = createPost(boardId, threadId, message, attachedFileId, creatorIP, creatorId)
+	print 'done the first one'
 	return threadId
 
-def createPost(boardId, threadId, message, attachedFileId=None, creatorId=None):
-	threadDatabase.incrementThreadPostCount(boardId, threadId)
-	postId = threadDatabase.getThreadPostCount(boardId, threadId)
+def createPost(boardId, threadId, message, attachedFileId=None, creatorIP=None, creatorId=None):
+	boardDatabase.incrementBoardPostCount(boardId)
+	postId = boardDatabase.getBoardPostCount(boardId)
+	print 'creating post with id'
+	print attachedFileId
+	print postId
 	threadDatabase.addPostIdToPostList(boardId, threadId, postId)
-	postDatabase.addPost(boardId, threadId, postId, message, attachedFileId, creatorId)
-	#TODO: this could do with better explaining, 
-	#there's no reason this should be in the board database
+	postDatabase.addPost(boardId, postId, message, attachedFileId, creatorIP, creatorId)
 	boardDatabase.moveThreadToFront(boardId, threadId)
 	return postId
 
@@ -36,7 +40,7 @@ def genPageButtons(boardId, pageNo):
 	#see how many buttons there shoud be and active the active one !
 	#calc the number of pages !!!
 	threadsNo = boardDatabase.getBoardThreadCount(boardId)
-	pages = (threadsNo/threadsPerPage)+1;
+	pages = (threadsNo/threadsPerPage)+1
 	result = []
 	for x in range(pages):
 		if int(x+1) == int(pageNo):
@@ -45,8 +49,13 @@ def genPageButtons(boardId, pageNo):
 			result.append({'number':str(x+1), 'active':str(False)})
 	return result
 
-def addFileToDatabase(boardId, threadId, postId, fileInfo, creatorIP):
-	return fileDatabase.addFile(boardId, threadId, postId, postId, fileInfo, creatorIP)
+def addFileToDatabase(fileInfo, creatorIP):
+	globalDatabase.incrementFileCount()
+	fileId = globalDatabase.getFileCount()
+	fileDatabase.addFile(fileId, fileInfo, creatorIP)
+	print 'file added'
+	print fileId
+	return fileId
 
 #FIXME: this function should MAYBE not be in the databaseFunctions, it's a frontend thing
 def getPagePreview(boardId, pageNo):
@@ -67,7 +76,6 @@ def getThread(boardId, threadId):
 	thread['posts'] = getAllPosts(boardId, threadId)
 	return thread
 
-
 def getThreadPreview(boardId, threadId):
 	thread = threadDatabase.getThreadInfo(boardId, threadId)
 	thread['posts'] = []
@@ -75,8 +83,17 @@ def getThreadPreview(boardId, threadId):
 	thread['posts'].extend( getPostsRange(boardId, threadId, -5, -1) )
 	return thread
 
-def getPost(boardId, threadId, postId):
-	return postDatabase.getPost(boardId, threadId, postId)
+def getPost(boardId, postId):
+	#also get the file info
+	postInfo = postDatabase.getPost(boardId, postId)
+	fileId = postInfo['attachedFileId']
+	if fileId != "" and fileId != None and fileId != 'NULL':
+		fileInfo = fileDatabase.getFileInfo(fileId)
+		postInfo['fileinfo'] = fileInfo
+
+	print 'postInfo'
+	print postInfo
+	return postInfo
 
 def getAllPosts(boardId, threadId):
 	return getPostsRange(boardId, threadId, 0, -1)
@@ -85,6 +102,6 @@ def getPostsRange(boardId, threadId, start, end):
 	tempList = threadDatabase.getThreadPostListRange(boardId, threadId, start, end)	
 	result = []
 	for postId in tempList:
-		result.append(postDatabase.getPost(boardId, threadId, postId))
+		result.append(getPost(boardId, postId))
 
 	return result

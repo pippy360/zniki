@@ -25,6 +25,10 @@
 .threadFirstPostImageWrapper{
   float: left;
   padding-right: 15px;
+  max-width: 250px;
+}
+.threadFirstPostImageWrapper img{
+  width: 100%;
 }
 .threadFirstPostRight{
   max-width: 600px;

@@ -12,21 +12,46 @@ postRedisDB.flushall()
 
 boardId = databaseFunctions.createBoard("New Board Test")
 
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", "file_001")
+fileData = {
+		'originalFilename': '98XY8luppNRc.jpg',
+		'hash':     'hash',
+		'filename':     '98XY8luppNRc.jpg',
+		'fileLocation': 'fileLocation',
+		'extension':    'extension',
+		'mimetype':     '',
+		'metadata': 'metadata',
+		'type':     'type'
+	}
 
+
+fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
+fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
+fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
+fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
+fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
+fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
+fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
+fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
+fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
+fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
+fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
+fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
+fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
+fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
+threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
 databaseFunctions.createPost(boardId, threadId, "Eating something")
 databaseFunctions.createPost(boardId, threadId, "This is post 1")
 databaseFunctions.createPost(boardId, threadId, "This is post 2")
@@ -50,7 +75,7 @@ databaseFunctions.createPost(boardId, threadId, "dicta sunt explicabo."+
 	"qui in ea voluptate velit esse quam nihil molestiae consequatur, vel"+
 	" illum qui dolorem eum fugiat quo voluptas nulla pariatur?")
 
-threadId = databaseFunctions.createThread(boardId, "Thread about cheese", "hey check out my new thread hey check out my new threadhey check out my new threadhey check out my new thread", "file_001")
+threadId = databaseFunctions.createThread(boardId, "Thread about cheese", "hey check out my new thread hey check out my new threadhey check out my new threadhey check out my new thread", fileId)
 
 databaseFunctions.createPost(boardId, threadId, "This man is "+
 	"making something. He has that ability. It's got style and personality. I love it.")
@@ -60,7 +85,7 @@ databaseFunctions.createPost(boardId, threadId, "This is post 4")
 databaseFunctions.createPost(boardId, threadId, "something here to test")
 
 
-threadId = databaseFunctions.createThread(boardId, "School books", "hey check out my new thread 324", "file_001")
+threadId = databaseFunctions.createThread(boardId, "School books", "hey check out my new thread 324", fileId)
 
 databaseFunctions.createPost(boardId, threadId, "This is post 1")
 databaseFunctions.createPost(boardId, threadId, "This is post 2")
@@ -69,7 +94,7 @@ databaseFunctions.createPost(boardId, threadId, "This is post 4")
 databaseFunctions.createPost(boardId, threadId, "This is post 5")
 
 
-threadId = databaseFunctions.createThread(boardId, "subject", "hey check out my new thread sdf", "file_001")
+threadId = databaseFunctions.createThread(boardId, "subject", "hey check out my new thread sdf", fileId)
 
 databaseFunctions.createPost(boardId, threadId, "This is post 1")
 databaseFunctions.createPost(boardId, threadId, "This is post 2")
@@ -109,14 +134,18 @@ def post(threadId):
 def showThread(threadId):
 	thread = databaseFunctions.getThread(boardId, threadId)
 	boardName = databaseFunctions.getBoardName(boardId)
-	return render_template("thread.html", boardName=boardName, thread=thread, threadId=threadId)
+	return render_template("thread.html", boardName=boardName, 
+							thread=thread, threadId=threadId)
 
 @app.route('/threadSubmit', methods=['POST'])
 def login():
 	threadId = ''
-	if request.form.get('subject') != None and request.form.get('comment') != None:
-		threadId = databaseFunctions.createThread(boardId, request.form['subject'], 
-			request.form['comment'], request)
+	if (request.form.get('subject') != None and request.form.get('comment') != None 
+		and request.files.get('photo') != None):
+		status = filesAPI.handleUploadFormSubmit(request.files)
+		fileId = databaseFunctions.addFileToDatabase(status['fileInfo'], "192.0.0.1")
+		threadId, postId = databaseFunctions.createThread(boardId, request.form['subject'], 
+												request.form['comment'], fileId)
 		return redirect('/thread/'+threadId)
 	else:
 		return redirect('/')#pass it here and pass on an error message
@@ -124,7 +153,8 @@ def login():
 #TODO: remove
 @app.route('/baseLayoutTest')
 def baseTest():
-	return render_template("baseLayout.html",errors=[{'message':'something here', 'class':'bg-danger'}])
+	return render_template("baseLayout.html",
+		errors=[{'message':'something here', 'class':'bg-danger'}])
 
 
 if __name__ == "__main__":
