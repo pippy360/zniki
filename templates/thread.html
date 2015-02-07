@@ -34,9 +34,9 @@
         <div class="threadFirstPostTitle">
           <span class="threadTitle">{{ thread['subject'] }}</span> - Thread id: {{ thread['threadId'] }}
         </div>
-        <div class="threadFirstPostMessage">
+        <blockqoute class="threadFirstPostMessage">
           {{ thread['posts'][0].message }}
-        </div>
+        </blockqoute>
       </div>
     </div>
     {% for post in thread['posts'] %}

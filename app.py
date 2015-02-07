@@ -80,6 +80,7 @@ def showThread(threadId,errors=[]):
 		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
 
 	thread = databaseFunctions.getThread(boardId, threadId)
+
 	if thread == None:
 		return redirect('/?error=Error: Thread doesn\'t exist.')
 	boardName = databaseFunctions.getBoardName(boardId)
@@ -160,8 +161,19 @@ def getThreadPreview(boardId, threadId):
 	thread['posts'] = []
 	thread['posts'].extend( databaseFunctions.getPostsRange(boardId, threadId, 0, 0) )
 	thread['posts'].extend( databaseFunctions.getPostsRange(boardId, threadId, -5, -1) )
+
 	return thread
 
+#not used, using javascript instead
+##insert a <wbr></wbr> every n chars
+#def formatPosts(posts, every=64):
+#	for post in posts:
+#	    lines = []
+#	    for i in xrange(0, len(post['message']), every):
+#	        lines.append(post['message'][i:i+every])
+#	    post['message']= '<wbr></wbr>'.join(lines)
+#
+#	return posts
 
 if __name__ == "__main__":
 	app.debug = True
