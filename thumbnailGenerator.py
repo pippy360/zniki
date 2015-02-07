@@ -7,9 +7,9 @@ from flask import send_file
 import os.path
 import Image
 import math
-from database   import databaseFunctions, databaseObjects
+from database import databaseFunctions
 
-thumbnailCacheFolder = './static/cache/'
+thumbnailCacheFolder = './tempFileStore/'
 
 def handleThumbnailRequest( request ):
   height  = int( request.args['height'] )
@@ -18,18 +18,21 @@ def handleThumbnailRequest( request ):
   fileId = request.args.get('fileId')
   if fileId != None:    
     fileInfo = databaseFunctions.getFileInfo( fileId )
-    print 'fileInfo'
-    print fileInfo
-    if fileInfo['fileType'] == databaseObjects.FileTypes.image:
+
+    if fileInfo == None:#or any of the other possible bad values
+      print 'bad file Id given'
+      return #render template with error
+
+    if fileInfo['fileType'] == 'image':
       thumbPath = createImageThumbnail( fileInfo['fileLocation'], fileInfo['filename'], (thumbWidth,height) )
-    elif fileInfo['fileType'] == databaseObjects.FileTypes.video:
+    elif fileInfo['fileType'] == 'video':
       thumbPath = createVideoThumbnail( fileInfo['fileLocation'], fileInfo['filename'], (thumbWidth,height) )
     else:
       print 'ERROR: BAD FILETYPE : ' + fileInfo['fileType'] 
+      return #render template with error
   else:
-    imageLocation = request.args['imageLocation']
-    imageFilename = request.args['imageFilename']
-    thumbPath = createImageThumbnail( imageLocation, imageFilename, (thumbWidth,height) )
+    print 'error, no file id'
+    return #todo: error handling
 
   return send_file( thumbPath, mimetype='image/png')
 

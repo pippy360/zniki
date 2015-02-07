@@ -23,7 +23,6 @@ import re
 #   - text/plain
 #   - text/x-*** (example: text/x-python - not guaranteed to be very accurate)
 #
-# Note that MediaCrush itself doesn't actually do anything with plaintext files yet.
 #
 # Video/audio is only returned if ffmpeg can handle it. 'image' is only returned if
 # ImageMagick can handle it.
@@ -228,7 +227,7 @@ def detect_stream(stream):
             return None
         if stream["codec_name"] == 'gif':
             return {
-                'type': 'video',
+                'type': 'image',
                 'metadata': { 'has_audio': False, 'has_video': True, 'dimensions': { 'width': int(stream['width']), 'height': int(stream['height']) } },
                 'processor_state': { 'has_audio': False, 'has_video': True },
                 'flags': {
@@ -285,7 +284,10 @@ def detect_imagemagick(path):
     a.run()
     try:
         result = a.stdout[0].split('\n')
+        if result == ['']:
+            return None
         # Get mime type and dimensions
+
         mimetype = None
         metadata = None
         for line in result:

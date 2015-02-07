@@ -13,22 +13,26 @@
 <div class="formWrapper">
   <span class="formsTitle">Add Post</span>
   <div class="newThreadForm">
-    <form action="/thread/{{threadId}}/post" method="post">
-      <span class="threadSubTitle">comment</span>
+    <form action="/thread/{{threadId}}/post" method="post"  enctype="multipart/form-data">
+      <span class="threadSubTitle">Comment:</span>
       <textarea name="postContent" class=""></textarea>
+      <span class="threadSubTitle">File:</span>
+      <input name="photo" type="file">
       <input class="submitButton" type="submit">
     </form>
   </div>
 </div>
 <div class="threadsWrapper">
-  <div class="thread">
-    <div class="threadFirstPost clearfix">
-      <div class="threadFirstPostImageWrapper clearfix">
-        <img src="http://dummyimage.com/150">
+  <div class="thread clearfix">
+    <div class="threadFirstPost">
+       <div class="threadFirstPostImageWrapper">
+        <a href="/static/storage/{{thread['posts'][0].fileinfo['filename']}}">
+          <img src="/thumb?height=250&width=250&fileId={{ thread['posts'][0].fileinfo['databaseId'] }}">
+        </a>
       </div>
-      <div class="threadFirstPostRight clearfix">
+      <div class="threadFirstPostRight">
         <div class="threadFirstPostTitle">
-          <span class="threadTitle">{{ thread['subject'] }}</span> - Thread id: {{ thread['threadId'] }} - <a href="/thread/{{ thread['threadId'] }}">Open Thread</a>
+          <span class="threadTitle">{{ thread['subject'] }}</span> - Thread id: {{ thread['threadId'] }}
         </div>
         <div class="threadFirstPostMessage">
           {{ thread['posts'][0].message }}
@@ -39,7 +43,18 @@
       {% if post != thread['posts'][0] %}
         <div class="postWrapper">
           <div class="post">
-              {{ post.message }}
+            <div class="postImageWrapper">
+              {% if post.attachedFileId != 'NULL' %}
+                <a href="/static/storage/{{post.fileinfo['filename']}}">
+                  <img class="postImage" src="/thumb?height=125&width=125&fileId={{ post.attachedFileId }}">
+                </a>
+              {% endif %}
+            </div>
+            <div class="postMessageWrapper">
+              <div class="postMessage">
+                {{ post.message }}
+              </div>
+            </div>
           </div>
         </div>
       {% endif %}
