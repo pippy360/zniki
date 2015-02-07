@@ -13,96 +13,6 @@ postRedisDB.flushall()
 
 boardId = databaseFunctions.createBoard("Home")
 
-fileData = {
-		'originalFilename': '98XY8luppNRc.jpg',
-		'hash':     'hash',
-		'filename':     '98XY8luppNRc.jpg',
-		'fileLocation': './static/storage/',
-		'extension':    'extension',
-		'mimetype':     '',
-		'metadata': 'metadata',
-		'type':     'image'
-	}
-
-
-fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
-fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
-fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
-fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
-fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
-fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
-fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
-fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
-fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
-fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
-fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
-fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
-fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
-fileId 	 = databaseFunctions.addFileToDatabase(fileData, "192.0.0.1")
-threadId = databaseFunctions.createThread(boardId, "I love NY", "hey check out my new thread", fileId)
-databaseFunctions.createPost(boardId, threadId, "Eating something")
-databaseFunctions.createPost(boardId, threadId, "This is post 1")
-databaseFunctions.createPost(boardId, threadId, "This is post 2")
-databaseFunctions.createPost(boardId, threadId, "This is post 3")
-databaseFunctions.createPost(boardId, threadId, "This is post 4")
-databaseFunctions.createPost(boardId, threadId, "This is post 5")
-databaseFunctions.createPost(boardId, threadId, "Sed ut perspiciatis "+
-	"unde omnis iste natus error sit voluptatem accusantium doloremque laudantium")
-databaseFunctions.createPost(boardId, threadId, " totam rem aperiam, "+
-	"eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae")
-databaseFunctions.createPost(boardId, threadId, "Something fruit")
-databaseFunctions.createPost(boardId, threadId, "dicta sunt explicabo."+
-	" Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit"+
-	" aut fugit, sed quia consequuntur magni dolores eos qui ratione"+
-	" voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem"+
-	" ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia"+
-	" non numquam eius modi tempora incidunt ut labore et dolore magnam"+
-	" aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum"+
-	" exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid"+
-	" ex ea commodi consequatur? Quis autem vel eum iure reprehenderit "+
-	"qui in ea voluptate velit esse quam nihil molestiae consequatur, vel"+
-	" illum qui dolorem eum fugiat quo voluptas nulla pariatur?")
-
-threadId = databaseFunctions.createThread(boardId, "Thread about cheese", "hey check out my new thread hey check out my new threadhey check out my new threadhey check out my new thread", fileId)
-
-databaseFunctions.createPost(boardId, threadId, "This man is "+
-	"making something. He has that ability. It's got style and personality. I love it.")
-databaseFunctions.createPost(boardId, threadId, "This is post 2")
-databaseFunctions.createPost(boardId, threadId, "This is post 3")
-databaseFunctions.createPost(boardId, threadId, "This is post 4")
-databaseFunctions.createPost(boardId, threadId, "something here to test")
-
-
-threadId = databaseFunctions.createThread(boardId, "School books", "hey check out my new thread 324", fileId)
-
-databaseFunctions.createPost(boardId, threadId, "This is post 1")
-databaseFunctions.createPost(boardId, threadId, "This is post 2")
-databaseFunctions.createPost(boardId, threadId, "This is post 3")
-databaseFunctions.createPost(boardId, threadId, "This is post 4")
-databaseFunctions.createPost(boardId, threadId, "This is post 5")
-
-
-threadId = databaseFunctions.createThread(boardId, "subject", "hey check out my new thread sdf", fileId)
-
-databaseFunctions.createPost(boardId, threadId, "This is post 1")
-databaseFunctions.createPost(boardId, threadId, "This is post 2")
-databaseFunctions.createPost(boardId, threadId, "This is post 3")
-databaseFunctions.createPost(boardId, threadId, "This is post 4")
-databaseFunctions.createPost(boardId, threadId, "This is post 5")
-
 threadsPerPage = 5
 MAX_SUBJECT_LENGTH = 50
 MAX_COMMENT_LENGTH = 10000
@@ -119,6 +29,15 @@ def showIndex():
 def showPage(pageNo, errors=[]):
 	if request.args.get('error') != None:
 		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
+
+	#for new boards
+	if getNumberOfPages(boardId) == 0:
+		return render_template("index.html", 
+			page={
+				'name': databaseFunctions.getBoardName(boardId),
+				'threads': [],
+		 	}, 
+			errors=errors)
 
 	pageNo = str(pageNo)
 	if int(pageNo) < 0 or int(pageNo) > getNumberOfPages(boardId):

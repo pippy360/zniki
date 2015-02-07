@@ -1,7 +1,9 @@
 {% extends "baseLayout.html" %}
 
 {% block topLink %}
+{%- if page -%} 
   <a href='/' class="topbarLink"> {{ page['name'] }}</a>
+{% endif %}
 {% endblock %}
 
 {% block head %}
@@ -30,63 +32,65 @@
   </div>
 </div>
 <div class="threadsWrapper">
-{% for thread in page['threads'] %}
-  <div class="thread clearfix">
-    <div class="threadFirstPost">
-      <div class="threadFirstPostImageWrapper">
-        <a href="/static/storage/{{thread['posts'][0].fileinfo['filename']}}">
-          <img src="/thumb?height=250&width=250&fileId={{ thread['posts'][0].fileinfo['databaseId'] }}">
-        </a>
-      </div>
-      <div class="threadFirstPostRight">
-        <div class="threadFirstPostTitle">
-          <span class="threadTitle">{{ thread['subject'] }}</span> - Thread id: {{ thread['threadId'] }} - <a href="/thread/{{ thread['threadId'] }}">Open Thread</a>
-        </div>
-        <div class="threadFirstPostMessage">
-          {{ thread['posts'][0].message }}
-        </div>
-      </div>
-    </div>
-    {% for post in thread['posts'] %}
-      {%- if post != thread['posts'][0] -%}
-        <div class="postWrapper">
-          <div class="post">
-            <div class="postImageWrapper">
-              {% if post.attachedFileId != 'NULL' %}
-                <a href="/static/storage/{{post.fileinfo['filename']}}">
-                  <img class="postImage" src="/thumb?height=125&width=125&fileId={{ post.attachedFileId }}">
-                </a>
-              {% endif %}
+  {%- if page -%} 
+    {% for thread in page['threads'] %}
+      <div class="thread clearfix">
+        <div class="threadFirstPost">
+          <div class="threadFirstPostImageWrapper">
+            <a href="/static/storage/{{thread['posts'][0].fileinfo['filename']}}">
+              <img src="/thumb?height=250&width=250&fileId={{ thread['posts'][0].fileinfo['databaseId'] }}">
+            </a>
+          </div>
+          <div class="threadFirstPostRight">
+            <div class="threadFirstPostTitle">
+              <span class="threadTitle">{{ thread['subject'] }}</span> - Thread id: {{ thread['threadId'] }} - <a href="/thread/{{ thread['threadId'] }}">Open Thread</a>
             </div>
-            <div class="postMessageWrapper">
-              <div class="postMessage">
-                {{ post.message }}
-              </div>
+            <div class="threadFirstPostMessage">
+              {{ thread['posts'][0].message }}
             </div>
           </div>
         </div>
-      {% endif %}
-    {% endfor %}
-  </div><!--/thread-->
-{% endfor %}
-<div class="pageNumbersCenterHack">
-  <div class="pageNumbersWrapper clearfix">
-    <ul class="pageNumbers clearfix">
-      {% if pageButtons %}
-        <li class="pageNumber clearfix">Pages: </li>
-        {% for pageButton in pageButtons %}
-          <li class="pageNumber clearfix">
-            {% if pageButton.active == 'True' %}
-              <a href="/page/{{ pageButton.number }}" class="active">{{ pageButton.number }}</a>
-            {% else %}
-              <a href="/page/{{ pageButton.number }}">{{ pageButton.number }}</a>
-            {% endif %}
-          </li>
+        {% for post in thread['posts'] %}
+          {%- if post != thread['posts'][0] -%}
+            <div class="postWrapper">
+              <div class="post">
+                <div class="postImageWrapper">
+                  {% if post.attachedFileId != 'NULL' %}
+                    <a href="/static/storage/{{post.fileinfo['filename']}}">
+                      <img class="postImage" src="/thumb?height=125&width=125&fileId={{ post.attachedFileId }}">
+                    </a>
+                  {% endif %}
+                </div>
+                <div class="postMessageWrapper">
+                  <div class="postMessage">
+                    {{ post.message }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endif %}
         {% endfor %}
-      {% endif %}
-    </ul>
+      </div><!--/thread-->
+    {% endfor %}
+  {% endif %}
+  <div class="pageNumbersCenterHack">
+    <div class="pageNumbersWrapper clearfix">
+      <ul class="pageNumbers clearfix">
+        {% if pageButtons %}
+          <li class="pageNumber clearfix">Pages: </li>
+          {% for pageButton in pageButtons %}
+            <li class="pageNumber clearfix">
+              {% if pageButton.active == 'True' %}
+                <a href="/page/{{ pageButton.number }}" class="active">{{ pageButton.number }}</a>
+              {% else %}
+                <a href="/page/{{ pageButton.number }}">{{ pageButton.number }}</a>
+              {% endif %}
+            </li>
+          {% endfor %}
+        {% endif %}
+      </ul>
+    </div>
   </div>
-</div>
 
 </div><!--/threadsWrapper--> 
 {% endblock %}
