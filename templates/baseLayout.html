@@ -6,14 +6,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Test Page</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-    <script src="/static/js/linebreakfix.js"></script>
     <link href="/static/baseLayout.css" rel="stylesheet">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
     {% block head %}{% endblock %}
   </head>
   <body>
     <header class="header">
       <div class="">
-        <span class="boardTitle">{% block topLink %}{% endblock %}</span>
+        <span class="boardTitle"><a href='/' class="topbarLink">Home</a></span>
+        <div class="topbarUsername dropdown">
+          <a id="dLabel" data-target="#" href="http://example.com" data-toggle="dropdown" aria-haspopup="true" role="button" aria-expanded="false">
+            <img src="http://placehold.it/25x25">
+            username
+            <span class="caret"></span>
+          </a>
+
+          <ul class="dropdown-menu pull-right" role="menu" aria-labelledby="dLabel">
+            <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Dashboard</a></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Settings</a></li>
+            <li role="presentation" class="divider"></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Log out</a></li>
+          </ul>
+        </div>
       </div>
     </header>
     <div class="errorWrapper">
@@ -30,5 +46,8 @@
       <div class="footer">
       </div>
     </footer>
+    <div class="hiddenModalWrappers">
+{% block modals %}{% endblock %}
+    </div>
   </body>
 </html>

@@ -19,7 +19,6 @@
 body, html{
   margin: 0;
   padding: 0;
-  background-color: #f9f9f9;
   font-family: "RobotoDraft","Roboto",sans-serif;
 }
 a{
@@ -38,12 +37,22 @@ a.topbarLink:hover{
 	color: white;
 	text-decoration: underline;
 }
+.topbarUsername a{
+  color: white;
+}
+.topbarUsername a:hover{
+  color: white;
+}
+.topbarUsername{
+  float: right;
+  margin-right: 30px;
+}
 .header{
   background-color: #00bcd4;
   color: white;
   font-size: 24px;
   line-height: 64px;
-  padding-left: 20px;
+  padding-left: 30px;
   margin-bottom: 70px;
 }
 .errorWrapper{
@@ -74,5 +83,5 @@ a.topbarLink:hover{
 	display: block;
 	margin-top: 100px;
 	height: 200px;
-	background-color: #2196F3;
+/*	background-color: #2196F3;*/
 }

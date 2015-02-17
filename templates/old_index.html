@@ -1,0 +1,96 @@
+{% extends "baseLayout.html" %}
+
+{% block topLink %}
+{%- if page -%} 
+  <a href='/' class="topbarLink"> {{ page['name'] }}</a>
+{% endif %}
+{% endblock %}
+
+{% block head %}
+    <link href="/static/threadStyle.css" rel="stylesheet">
+    <link href="/static/components.css" rel="stylesheet">
+    <style type="text/css">
+.threadsWrapper{
+  padding-bottom: 0px;
+}
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="formWrapper">
+  <span class="formsTitle">Create New Thread</span>
+  <div class="newThreadForm">
+    <form action="/threadSubmit" method="post" enctype="multipart/form-data">
+      <span class="threadSubTitle">Subject:</span>
+      <input name="subject" class="input" />
+      <span class="threadSubTitle">File:</span>
+      <input name="photo" type="file">
+      <span class="threadSubTitle">Comment:</span>
+      <textarea name="comment" class=""></textarea>
+      <input class="submitButton" type="submit">
+    </form>
+  </div>
+</div>
+<div class="threadsWrapper">
+  {%- if page -%} 
+    {% for thread in page['threads'] %}
+      <div class="thread clearfix">
+        <div class="threadFirstPost">
+          <div class="threadFirstPostImageWrapper">
+            <a href="/static/storage/{{thread['posts'][0].fileinfo['filename']}}">
+              <img src="/thumb?height=250&width=250&fileId={{ thread['posts'][0].fileinfo['databaseId'] }}">
+            </a>
+          </div>
+          <div class="threadFirstPostRight">
+            <div class="threadFirstPostTitle">
+              <span class="threadTitle">{{ thread['subject'] }}</span> - Thread id: {{ thread['threadId'] }} - <a href="/thread/{{ thread['threadId'] }}">Open Thread</a>
+            </div>
+            <div class="threadFirstPostMessage">
+              {{ thread['posts'][0].message }}
+            </div>
+          </div>
+        </div>
+        {% for post in thread['posts'] %}
+          {%- if post != thread['posts'][0] -%}
+            <div class="postWrapper">
+              <div class="post">
+                <div class="postImageWrapper">
+                  {% if post.attachedFileId != 'NULL' %}
+                    <a href="/static/storage/{{post.fileinfo['filename']}}">
+                      <img class="postImage" src="/thumb?height=125&width=125&fileId={{ post.attachedFileId }}">
+                    </a>
+                  {% endif %}
+                </div>
+                <div class="postMessageWrapper">
+                  <div class="postMessage">
+                    {{ post.message }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div><!--/thread-->
+    {% endfor %}
+  {% endif %}
+  <div class="pageNumbersCenterHack">
+    <div class="pageNumbersWrapper clearfix">
+      <ul class="pageNumbers clearfix">
+        {% if pageButtons %}
+          <li class="pageNumber clearfix">Pages: </li>
+          {% for pageButton in pageButtons %}
+            <li class="pageNumber clearfix">
+              {% if pageButton.active == 'True' %}
+                <a href="/page/{{ pageButton.number }}" class="active">{{ pageButton.number }}</a>
+              {% else %}
+                <a href="/page/{{ pageButton.number }}">{{ pageButton.number }}</a>
+              {% endif %}
+            </li>
+          {% endfor %}
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+
+</div><!--/threadsWrapper--> 
+{% endblock %}

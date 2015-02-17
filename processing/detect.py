@@ -286,6 +286,7 @@ def detect_imagemagick(path):
         result = a.stdout[0].split('\n')
         if result == ['']:
             return None
+
         # Get mime type and dimensions
 
         mimetype = None

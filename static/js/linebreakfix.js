@@ -8,9 +8,9 @@ String.prototype.chunk = function(n) {
 
 $( document ).ready(function(){
 	$('.threadFirstPostMessage').each(function(){
-		$(this).html( $(this).html().chunk(10).join("<wbr></wbr>") )
+		$(this).html( $(this).html().chunk(35).join("<wbr></wbr>") )
 	})
 	$('.postMessage').each(function(){
-		$(this).html( $(this).html().chunk(10).join("<wbr></wbr>") )
+		$(this).html( $(this).html().chunk(35).join("<wbr></wbr>") )
 	})
 })

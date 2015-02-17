@@ -115,6 +115,23 @@ def login():
 	else:
 		return redirect('/')#pass it here and pass on an error message
 
+@app.route('/createNewGroup')
+def createNewGroupPage():
+	return render_template('createNewGroup.html')
+
+@app.route('/createNewGroupSubmit', methods=['POST'])
+def createNewGroupSubmitPage():
+	#load all the info
+	return redirect('/')
+
+@app.route('/<boardId>/createNewConv')
+def createNewConversationPage(boardId):
+	return render_template('createNewThread.html')
+
+@app.route('/<boardId>/createNewConvSubmit')
+def createNewConversationSubmitPage(boardId):
+	return render_template('createNewThread.html')
+
 #TODO: remove
 @app.route('/baseLayoutTest')
 def baseTest():

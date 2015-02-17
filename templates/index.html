@@ -1,10 +1,6 @@
 {% extends "baseLayout.html" %}
 
-{% block topLink %}
-{%- if page -%} 
-  <a href='/' class="topbarLink"> {{ page['name'] }}</a>
-{% endif %}
-{% endblock %}
+
 
 {% block head %}
     <link href="/static/threadStyle.css" rel="stylesheet">
@@ -12,85 +8,112 @@
     <style type="text/css">
 .threadsWrapper{
   padding-bottom: 0px;
+  width: 700px;
+  float: left;
+  padding: 0;
+  border-left: 1px solid rgba(0,0,0,.1);
 }
+.groupsMenu{
+	float: left;
+	width: 350px;
+	margin-left: 20px;
+}
+.createNewThread{
+	float: right;
+	font-size: 18px;
+	margin: 10px;
+}
+.menuItem{
+	width: 100%;
+	height: 70px;
+}
+.menuItem.active{
+	background-color: rgba(0,0,0,.1);
+}
+.menuItem:hover{
+	background-color: rgba(0,0,0,.1);
+}
+.createNewGroupWrapper{
+
+}
+.createNewGroup{
+	margin: 10px;
+	float: right;
+}
+.menuItem .greyCircle{
+	border-radius: 50%;
+	width: 50px;
+	height: 50px;
+	float: left;
+	display: block;
+	background-color: rgba(0,0,0,.1);
+	position: relative;
+	top: 10px;
+	left: 10px;
+}
+.menuItem .groupNameText{
+	position: relative;
+	top: 25px;
+	left: 20px;
+}
+.content{
+	width: 1171px;
+	margin: auto;
+}
+.header{
+	margin-bottom: 0px;
+}
+
     </style>
 {% endblock %}
 
 {% block content %}
-<div class="formWrapper">
-  <span class="formsTitle">Create New Thread</span>
-  <div class="newThreadForm">
-    <form action="/threadSubmit" method="post" enctype="multipart/form-data">
-      <span class="threadSubTitle">Subject:</span>
-      <input name="subject" class="input" />
-      <span class="threadSubTitle">File:</span>
-      <input name="photo" type="file">
-      <span class="threadSubTitle">Comment:</span>
-      <textarea name="comment" class=""></textarea>
-      <input class="submitButton" type="submit">
-    </form>
-  </div>
-</div>
-<div class="threadsWrapper">
-  {%- if page -%} 
-    {% for thread in page['threads'] %}
-      <div class="thread clearfix">
-        <div class="threadFirstPost">
-          <div class="threadFirstPostImageWrapper">
-            <a href="/static/storage/{{thread['posts'][0].fileinfo['filename']}}">
-              <img src="/thumb?height=250&width=250&fileId={{ thread['posts'][0].fileinfo['databaseId'] }}">
-            </a>
-          </div>
-          <div class="threadFirstPostRight">
-            <div class="threadFirstPostTitle">
-              <span class="threadTitle">{{ thread['subject'] }}</span> - Thread id: {{ thread['threadId'] }} - <a href="/thread/{{ thread['threadId'] }}">Open Thread</a>
-            </div>
-            <div class="threadFirstPostMessage">
-              {{ thread['posts'][0].message }}
-            </div>
-          </div>
-        </div>
-        {% for post in thread['posts'] %}
-          {%- if post != thread['posts'][0] -%}
-            <div class="postWrapper">
-              <div class="post">
-                <div class="postImageWrapper">
-                  {% if post.attachedFileId != 'NULL' %}
-                    <a href="/static/storage/{{post.fileinfo['filename']}}">
-                      <img class="postImage" src="/thumb?height=125&width=125&fileId={{ post.attachedFileId }}">
-                    </a>
-                  {% endif %}
-                </div>
-                <div class="postMessageWrapper">
-                  <div class="postMessage">
-                    {{ post.message }}
-                  </div>
-                </div>
-              </div>
-            </div>
-          {% endif %}
-        {% endfor %}
-      </div><!--/thread-->
-    {% endfor %}
-  {% endif %}
-  <div class="pageNumbersCenterHack">
-    <div class="pageNumbersWrapper clearfix">
-      <ul class="pageNumbers clearfix">
-        {% if pageButtons %}
-          <li class="pageNumber clearfix">Pages: </li>
-          {% for pageButton in pageButtons %}
-            <li class="pageNumber clearfix">
-              {% if pageButton.active == 'True' %}
-                <a href="/page/{{ pageButton.number }}" class="active">{{ pageButton.number }}</a>
-              {% else %}
-                <a href="/page/{{ pageButton.number }}">{{ pageButton.number }}</a>
-              {% endif %}
-            </li>
-          {% endfor %}
-        {% endif %}
-      </ul>
-    </div>
-  </div>
+<div>
+	<div class="content clearfix">
+		<div class="groupsMenu">
+			<div class="createNewGroupWrapper clearfix">
+				<span class="createNewGroup"><a href="/createNewGroup" >Create New Group</a></span>
+			</div>
+			<ul>
+				<li><a href="#"><div class="menuItem active"><span class="greyCircle"></span><span class="groupNameText">Something</span></div></a></li>
+				<li><a href="#"><div class="menuItem"><span class="greyCircle"></span><span class="groupNameText">Something</span></div></a></li>
+				<li><a href="#"><div class="menuItem"><span class="greyCircle"></span><span class="groupNameText">Something</span></div></a></li>
+				<li><a href="#"><div class="menuItem"><span class="greyCircle"></span><span class="groupNameText">Something</span></div></a></li>
+			</ul>
+		</div>
+		<div class="threadsWrapper">
+			<div class="createNewThreadWrapper clearfix">
+				<div class="createNewThread"><a href="/threadId/createNewConv">Create New Conversation</a></div>
+			</div>
+		  {%- if page -%} 
+		    {% for thread in page['threads'] %}
 
-</div><!--/threadsWrapper--> 
+		      <div class="thread clearfix">
+		        <div class="threadFirstPost">
+		          <div class="threadFirstPostImageWrapper">
+		              <img src="/thumb?height=125&width=125&fileId={{ thread['posts'][0].fileinfo['databaseId'] }}">
+		          </div>
+		          <div class="threadFirstPostRight">
+		            <div class="threadFirstPostTitle">
+            		<a href="">
+		              <span class="threadTitle">{{ thread['subject'] }}</span>
+           			</a>
+		            </div>
+		            <div class="threadFirstPostMessage">
+		              {{ thread['posts'][0].message }}
+		            </div>
+		          </div>
+		        </div>
+		      </div><!--/thread-->
+		    {% endfor %}
+		  {% endif %}
+		</div><!--/threadsWrapper--> 
+	</div>
+</div>
+{% endblock %}
+
+
+{%block modals %}
+
+
 {% endblock %}
