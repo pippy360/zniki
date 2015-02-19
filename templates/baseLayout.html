@@ -17,19 +17,25 @@
       <div class="">
         <span class="boardTitle"><a href='/' class="topbarLink">Home</a></span>
         <div class="topbarUsername dropdown">
+{% if current_user.is_authenticated() %}
+        
           <a id="dLabel" data-target="#" href="http://example.com" data-toggle="dropdown" aria-haspopup="true" role="button" aria-expanded="false">
             <img src="http://placehold.it/25x25">
-            username
+            {{current_user.username}}
             <span class="caret"></span>
           </a>
 
           <ul class="dropdown-menu pull-right" role="menu" aria-labelledby="dLabel">
-            <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Dashboard</a></li>
-            <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Settings</a></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" href="/dashboard">Dashboard</a></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" href="/dashboard?settings=1">Settings</a></li>
             <li role="presentation" class="divider"></li>
-            <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Log out</a></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" href="/logout">Log out</a></li>
           </ul>
-        </div>
+        
+{% else %}
+          <span><a href="/login">Sign Up/Sign In</a></span>
+{% endif %}
+        </div><!--/topbarUsername-->
       </div>
     </header>
     <div class="errorWrapper">

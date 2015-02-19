@@ -3,14 +3,20 @@ import redis
 import filesAPI
 import thumbnailGenerator
 from flask import Flask, render_template, request, send_file, redirect, url_for
+from flask.ext import login
+import loginLogic
+import utils
 app = Flask(__name__)
-
+app.config['SECRET_KEY'] = '123456790'
 
 
 postRedisDB = redis.StrictRedis( '127.0.0.1', 6379 )
 postRedisDB.flushall()
 
 
+boardId = databaseFunctions.createBoard("Home")
+boardId = databaseFunctions.createBoard("Home")
+boardId = databaseFunctions.createBoard("Home")
 boardId = databaseFunctions.createBoard("Home")
 
 threadsPerPage = 5
@@ -22,30 +28,17 @@ MAX_COMMENT_LENGTH = 10000
 @app.route("/home/")
 @app.route("/index.html")
 def showIndex():
-	return showPage(1)
+	errors = []
+	if request.args.get('error') != None:
+		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
+	if request.args.get('success') != None:
+		errors = [{'message':request.args.get('success'),'class':'bg-success'}]
 
-@app.route("/page/<int:pageNo>")
-@app.route("/page/<int:pageNo>/")
-def showPage(pageNo, errors=[]):
+	boardList = databaseFunctions.getAllBoards()
 	if request.args.get('error') != None:
 		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
 
-	#for new boards
-	if getNumberOfPages(boardId) == 0:
-		return render_template("index.html", 
-			page={
-				'name': databaseFunctions.getBoardName(boardId),
-				'threads': [],
-		 	}, 
-			errors=errors)
-
-	pageNo = str(pageNo)
-	if int(pageNo) < 0 or int(pageNo) > getNumberOfPages(boardId):
-		return redirect('/?error=Error: page number '+pageNo+' does not exist')
-
-	page = getPagePreview(boardId, int(pageNo))
-	return render_template("index.html", page=page, 
-		pageButtons=genPageButtons(boardId, pageNo), errors=errors)
+	return render_template("index.html", errors=errors, boardList=boardList)
 
 @app.route("/thread/<threadId>/post", methods=['POST'])
 def post(threadId):
@@ -87,8 +80,59 @@ def showThread(threadId,errors=[]):
 	return render_template("thread.html", boardName=boardName, 
 							thread=thread, threadId=threadId,errors=errors)
 
+@app.route('/login')
+def loginPage():
+	errors = []
+	if request.args.get('error') != None:
+		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
+	if request.args.get('success') != None:
+		errors = [{'message':request.args.get('success'),'class':'bg-success'}]
+	return render_template('login.html', errors=errors)
+
+@app.route('/loginSubmit', methods=['POST'])
+def loginSubmitPage():
+	userStringId = request.form.get('input_usernameLogin')
+	password 	 = request.form.get('input_passwordLogin')
+
+	#make sure they're non empty
+
+	status = loginLogic.loginUser(userStringId, password)
+	print 'status'
+	print status
+	if not status['isValid']:
+		return redirect('/login?error='+status['reason'])
+
+	return redirect('/')
+
+#FIXME: MORE CHECKING HERE !!!
+@app.route('/signUpSubmit', methods=['POST'])
+def signUpSubmitPage():
+	username 	 = request.form.get('input_usernameSignup')
+	password1 	 = request.form.get('input_passwordSignup1')
+	password2 	 = request.form.get('input_passwordSignup2')
+	email 	 	 = request.form.get('input_emailSignup')
+	
+	if username == None or username == '':
+		return redirect('/login?error=Error: Invalid username')
+	elif password1 == None or password1 == '':
+		return redirect('/login?error=Error: Invalid Password')
+	elif email == None or email == '':
+		return redirect('/login?error=Error: Invalid Email')
+	elif not password1 == password2:
+		return redirect('/login?error=Error: Passwords did not match')
+	else:
+		returnCode = databaseFunctions.addUser(email, username, password1, 0)
+		if returnCode == -1:
+			return redirect('/login?error=Error: Username Taken')
+		elif returnCode == -2:
+			return redirect('/login?error=Error: Email Taken')
+
+		return redirect('/?success=Success: Account created !')
+
+	return redirect('/login?error=Error: Sign up failed')
+
 @app.route('/threadSubmit', methods=['POST'])
-def login():
+def threadSubmitPage():
 	threadId = ''
 	if (request.form.get('subject') != None and request.form.get('comment') != None 
 		and request.files.get('photo') != None):
@@ -121,7 +165,12 @@ def createNewGroupPage():
 
 @app.route('/createNewGroupSubmit', methods=['POST'])
 def createNewGroupSubmitPage():
-	#load all the info
+	groupName = request.form.get("input_groupName")
+	if groupName == None:
+		return redirect('/createNewGroup?error=Error: Invalid Group Name')
+
+	#create a new board
+	databaseFunctions.createBoard(groupName)
 	return redirect('/')
 
 @app.route('/<boardId>/createNewConv')
@@ -191,6 +240,125 @@ def getThreadPreview(boardId, threadId):
 #	    post['message']= '<wbr></wbr>'.join(lines)
 #
 #	return posts
+
+
+
+#     #   #####   #######  ######  
+#     #  #     #  #        #     # 
+#     #  #        #        #     # 
+#     #   #####   #####    ######  
+#     #        #  #        #   #   
+#     #  #     #  #        #    #  
+ #####    #####   #######  #     # 
+
+@app.route('/dashboard')
+@login.login_required
+def dashboardPage(errors=[]):
+	errors = []
+	if request.args.get('error') != None:
+		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
+	if request.args.get('success') != None:
+		errors = [{'message':request.args.get('success'),'class':'bg-success'}]
+	return render_template('dashboard.html',errors=errors)
+
+@app.route('/logout')
+@login.login_required
+def logoutPage(errors=[]):
+	login.logout_user()
+	return redirect('/?success=You are now logged out')
+
+@app.route('/changeUsername')
+@login.login_required
+def changeUsernamePage():
+	errors = []
+	if request.args.get('error') != None:
+		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
+	if request.args.get('success') != None:
+		errors = [{'message':request.args.get('success'),'class':'bg-success'}]
+	return render_template('changeUsername.html',errors=errors)
+
+@app.route('/changeUsernameSubmit', methods=['POST'])
+@login.login_required
+def changeUsernameSubmitPage():
+	newUsername = request.form.get('input_newUsername')
+	if newUsername != None and newUsername != '' and utils.isValidUsername(newUsername):
+		if databaseFunctions.changeUsername(login.current_user.userId, newUsername) == -1:
+			return redirect('/changeUsername?error=Error: Username Taken&settings=1')
+		else:
+			return redirect('/dashboard?success=Success: Username Changed&settings=1')
+	
+	return redirect('/changeUsername?error=Error: Invalid Username')
+
+@app.route('/changeEmail')
+@login.login_required
+def changeEmailPage():
+	errors = []
+	if request.args.get('error') != None:
+		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
+	if request.args.get('success') != None:
+		errors = [{'message':request.args.get('success'),'class':'bg-success'}]
+	return render_template('changeEmail.html',errors=errors)
+
+@app.route('/changeEmailSubmit', methods=['POST'])
+@login.login_required
+def changeEmailSubmitPage():
+	newEmail = request.form.get('input_newEmail')
+	if newEmail != None and newEmail != '' and utils.isValidEmail(newEmail):
+		if databaseFunctions.changeEmail(login.current_user.userId, newEmail) == -1:
+			return redirect('/changeEmail?error=Error: Email Taken&settings=1')
+		else:
+			return redirect('/dashboard?success=Success: Email Changed&settings=1')
+	
+	return redirect('/changeEmail?error=Error: Invalid email address')
+
+@app.route('/changePassword')
+@login.login_required
+def changePasswordPage():
+	errors = []
+	if request.args.get('error') != None:
+		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
+	if request.args.get('success') != None:
+		errors = [{'message':request.args.get('success'),'class':'bg-success'}]
+	return render_template('changePassword.html', errors=errors)
+
+@app.route('/changePasswordSubmit', methods=['POST'])
+@login.login_required
+def changePasswordSubmitPage():
+	if (request.form.get('input_oldPassword') != None and request.form.get('input_newPassword1') != None 
+			and request.form.get('input_newPassword2') != None):
+		oldPassword  = request.form.get('input_oldPassword')
+		newPassword1 = request.form.get('input_newPassword1')
+		newPassword2 = request.form.get('input_newPassword2')
+
+		oldPasswordHash = oldPassword;
+		if oldPasswordHash != login.current_user.passwordHash:#the old password
+			return redirect('/changePassword?error=Error: Wrong Old password.')
+		elif newPassword1 != newPassword2:
+			return redirect('/changePassword?error=Error: New Passwords didn\'t Match')
+
+		newPasswordHash = newPassword1
+
+		databaseFunctions.changePasswordHash(login.current_user.userId, newPasswordHash)
+		return redirect('/dashboard?success=Success: Password Changed')
+	else:
+		return redirect('/dashboard?error=Error: Password Change Failed, darn it :(')
+
+
+def init_login():
+	login_manager = login.LoginManager()
+	login_manager.init_app(app)
+
+	# Create user loader function
+	@login_manager.user_loader
+	def load_user(user_id):
+		return loginLogic.getUserFromId(user_id)
+
+	@login_manager.unauthorized_handler
+	def showLoginPage():
+		return redirect("/login")
+
+
+init_login()
 
 if __name__ == "__main__":
 	app.debug = True

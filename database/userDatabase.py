@@ -3,12 +3,12 @@ import redis
 keyFormat = 'active_user_{0}'
 activeRedisDB = redis.StrictRedis( '127.0.0.1', 6379 )
 
-def addUser(userId, email, username, passwordHash, apiKey, isAdmin):
+def addUser(userId, email, username, passwordHash, isAdmin, reputation):
   user = {
     'email':email,
     'username':username,
     'passwordHash':passwordHash,
-    'apiKey':apiKey,
+    'reputation':reputation,
     'isAdmin':isAdmin
   }
   key = _activeKey(userId)
@@ -17,6 +17,10 @@ def addUser(userId, email, username, passwordHash, apiKey, isAdmin):
 def changeUsername(userId, newUsername):
   key = _activeKey(userId)
   activeRedisDB.hset(key, 'username', newUsername)
+
+def changeEmail(userId, newEmail):
+  key = _activeKey(userId)
+  activeRedisDB.hset(key, 'email', newEmail)
 
 def changePasswordHash(userId, newPasswordHash):
   key = _activeKey(userId)

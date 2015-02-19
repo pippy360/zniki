@@ -1,0 +1,88 @@
+{% extends "baseLayout.html" %}
+
+{% block topLink %}
+<a href='/' class="topbarLink"> {{boardName}}</a>  > <a href='/thread/{{ thread['threadId'] }}' class="topbarLink"> Thread {{ thread['threadId'] }} </a>
+{% endblock %}
+
+{% block head %}
+    <link href="/static/threadStyle.css" rel="stylesheet">
+    <style type="text/css">
+.content{
+  width: 600px;
+  margin:auto;
+}
+.tab-pane{
+  padding: 40px;
+}
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="content">
+  <div role="tabpanel">
+
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" role="tablist">
+      {% if request.args.get('settings') == '1' %}
+        <li role="presentation"><a href="#dashboard" aria-controls="dashboard" role="tab" data-toggle="tab">Dashboard</a></li>
+        <li role="presentation" class="active"><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">Settings</a></li>
+      {% else %}
+        <li role="presentation" class="active"><a href="#dashboard" aria-controls="dashboard" role="tab" data-toggle="tab">Dashboard</a></li>
+        <li role="presentation"><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">Settings</a></li>
+      {% endif %}
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+      {% if request.args.get('settings') == '1' %}
+      <div role="tabpanel" class="tab-pane" id="dashboard">
+      {% else %}
+      <div role="tabpanel" class="tab-pane active" id="dashboard">
+      {% endif %}
+        <div>
+          <div>
+            Your Email: {{current_user.email}}
+            <br>
+            <br>
+          </div>
+          <div>
+            Reputation: {{current_user.reputation}}
+            <br>
+            <br>
+          </div>
+          <div>
+            Friends:
+            <br>
+            <br>
+          </div>
+        </div> 
+      </div><!--/dashboard-->
+      {% if request.args.get('settings') == '1' %}
+      <div role="tabpanel" class="tab-pane active" id="settings">
+      {% else %}
+      <div role="tabpanel" class="tab-pane" id="settings">
+      {% endif %}
+        <div>
+          <div>
+            <a href="/changeUsername">Change Username</a>
+            <br>
+            <br>
+          </div>
+          <div>
+            <a href="/changeEmail">Change Email</a>
+            <br>
+            <br>
+          </div>
+          <div>
+            <a href="/changePassword">Change Password</a>
+            <br>
+            <br>
+          </div>
+        </div> 
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+

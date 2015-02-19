@@ -1,0 +1,71 @@
+
+{% extends "baseLayout.html" %}
+
+{% block head %}
+<style>
+.contentWrapper{
+  margin: auto;
+  max-width: 800px;
+}
+.content{
+  padding: 20px;
+  width: 800px;
+}
+.leftArea{
+  padding: 40px;
+  float: left;
+  width: 380px;
+  border-right: 1px solid #c0c0c0;
+}
+.rightArea{
+  padding: 40px;
+  float: left;
+  width: 380px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content">
+  <div class="leftArea">
+    <form action="/signUpSubmit" method="post">
+      <label>Create A New Account</label>
+      <br>
+      <br>
+      <div class="form-group">
+        <input type="text" class="form-control" name="input_usernameSignup" id="input_usernameSignup" placeholder="choose a username">
+      </div>
+      <div class="form-group">
+        <input type="password" class="form-control" name="input_passwordSignup1" id="input_passwordSignup1" placeholder="Password">
+      </div>
+      <div class="form-group">
+        <input type="password" class="form-control" name="input_passwordSignup2" id="input_passwordSignup2" placeholder="Verify Password">
+      </div>
+      <div class="form-group">
+        <input type="email" class="form-control" name="input_emailSignup" id="input_emailSignup" placeholder="Email">
+      </div>
+      <button type="submit" class="btn btn-default pull-right">Create Account</button>
+    </form>
+  </div>
+  <div class="rightArea">
+    <form action="/loginSubmit" method="post">
+      <label>Sign In</label>
+      <br>
+      <br>
+      <div class="form-group">
+        <input type="text" class="form-control" name="input_usernameLogin" id="input_usernameLogin" placeholder="Username">
+      </div>
+      <div class="form-group">
+        <input type="password" class="form-control" name="input_passwordLogin" id="input_passwordLogin" placeholder="Password">
+      </div>
+      <button type="submit" class="btn btn-default pull-right">Sign In</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+
+{%block modals %}
+
+
+{% endblock %}

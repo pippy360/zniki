@@ -85,3 +85,6 @@ a.topbarLink:hover{
 	height: 200px;
 /*	background-color: #2196F3;*/
 }
+.dropdown-menu{
+  font-size: 16px;
+}
