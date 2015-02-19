@@ -21,13 +21,21 @@ def createBoard(name):
 def getAllBoards():
 	result = []
 	for boardId in globalDatabase.getBoardList():
-		result.append(boardDatabase.getBoardInfo(boardId))
+		result.append(getBoardInfo(boardId))
+
+	return result
+
+def getAllBoardsPreview():
+	result = []
+
+	for boardId in globalDatabase.getBoardList():
+		result.append(getBoardInfoPreview(boardId))
 
 	return result
 
 #returns the id of the thread and the id of the OP's post
 def createThread(boardId, subject, message, attachedFileId, creatorIP=None, creatorId=None):
-	#TODO: replace with get threadId()
+	threadId = boardDatabase.incrementBoardThreadCount(boardId)
 	threadId = str(boardDatabase.getBoardThreadCount(boardId))
 	threadDatabase.addNewThread(boardId, threadId, subject)
 	boardDatabase.addThreadIdToThreadList(boardId, threadId)
@@ -46,7 +54,24 @@ def getBoardThreadCount(boardId):
 	return boardDatabase.getBoardThreadCount(boardId)
 
 def getBoardInfo(boardId):
-	return boardDatabase.getBoardInfo(boardId)
+	board = boardDatabase.getBoardInfo(boardId)
+	board['boardId'] = boardId
+	return board
+
+#get the board info along with the OP post all the threads in that board
+def getBoardInfoPreview(boardId):
+	threadIds = boardDatabase.getBoardThreadListAll(boardId)
+	threads = []
+	for threadId in threadIds:
+		thread = threadDatabase.getThreadInfo(boardId, threadId)
+		thread['posts'] = getPostsRange(boardId, threadId, 0, 0)
+		threads.append(thread)
+
+	board = boardDatabase.getBoardInfo(boardId)
+	board['boardId'] = boardId
+	board['threads'] = threads
+	return board
+
 
 def addFileToDatabase(fileInfo, creatorIP):
 	globalDatabase.incrementFileCount()
@@ -86,9 +111,6 @@ def getBoardThreadListRange(boardId, start, end):
 
 def getThreadInfo(boardId, threadId):
 	return threadDatabase.getThreadInfo(boardId, threadId)
-
-def getBoardInfo(boardId):
-	return boardDatabase.getBoardInfo(boardId)
 
 def getPostsRange(boardId, threadId, start, end):
 	tempList = threadDatabase.getThreadPostListRange(boardId, threadId, start, end)	

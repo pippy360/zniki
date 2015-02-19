@@ -16,14 +16,14 @@
 .groupsMenu{
 	float: left;
 	width: 350px;
-	margin-left: 20px;
 }
 .createNewThread{
 	float: right;
 	font-size: 18px;
 	margin: 10px;
 }
-.menuItem{
+.menuItem a{
+	display: block;
 	width: 100%;
 	height: 70px;
 }
@@ -57,7 +57,7 @@
 	left: 20px;
 }
 .content{
-	width: 1171px;
+	width: 1050px;
 	margin: auto;
 }
 .header{
@@ -65,14 +65,15 @@
 	margin: auto;
 }
 .error{
-	width: 1131px;
 	margin-bottom: 0;
 }
 .errorWrapper{
-	width: 1131px;
+	width: 1050px;
 	margin: auto;
 }
-
+.threadTitle{
+	color: #337ab7;
+}
     </style>
 {% endblock %}
 
@@ -85,37 +86,49 @@
 			</div>
 			<ul>
 				{% for board in boardList %}
-					<li><a href="#"><div class="menuItem"><span class="greyCircle"></span><span class="groupNameText">{{board['name']}}</span></div></a></li>
+					{% if loop.index == 1 %}
+						<li class="menuItem active"><a href="#tab_board{{board['boardId']}}" aria-controls="tab_board{{board['boardId']}}" role="tab" data-toggle="tab"><div><span class="greyCircle"></span><span class="groupNameText">{{board['name']}}</span></div></a></li>
+					{% else %}
+						<li class="menuItem"><a href="#tab_board{{board['boardId']}}" aria-controls="tab_board{{board['boardId']}}" role="tab" data-toggle="tab"><div class=""><span class="greyCircle"></span><span class="groupNameText">{{board['name']}}</span></div></a></li>
+					{% endif %}
 				{% endfor %}
 			</ul>
 		</div>
-		<div class="threadsWrapper">
-			<div class="createNewThreadWrapper clearfix">
-				<div class="createNewThread"><a href="/threadId/createNewConv">Create New Conversation</a></div>
+		<div class="tab-content">
+			{% for board in boardList %}
+				{% if loop.index == 1 %}
+					<div role="tabpanel" class="tab-pane active" id="tab_board{{board['boardId']}}">
+				{% else %}
+					<div role="tabpanel" class="tab-pane" id="tab_board{{board['boardId']}}">
+		    	{% endif %}			
+				<div class="threadsWrapper">
+						
+						<div class="createNewThreadWrapper clearfix">
+							<div class="createNewThread"><a href="/{{board['boardId']}}/createNewConv">Create New Conversation</a></div>
+						</div>
+				    {% for thread in board['threads'] %}
+					      <div class="thread clearfix">
+					        <div class="threadFirstPost">
+					          <div class="threadFirstPostImageWrapper">
+					              <img src="/thumb?height=125&width=125&fileId={{ thread['posts'][0].fileinfo['databaseId'] }}">
+					          </div>
+					          <div class="threadFirstPostRight">
+					            <div class="threadFirstPostTitle">
+			            		<a href="/board/{{board['boardId']}}/thread/{{thread['threadId']}}">
+					              <span class="threadTitle">{{ thread['subject'] }}</span>
+			           			</a>
+					            </div>
+					            <div class="threadFirstPostMessage">
+					              {{ thread['posts'][0].message }}
+					            </div>
+					          </div>
+					        </div>
+					      </div><!--/thread-->
+				    {% endfor %}
+				</div><!--/threadsWrapper--> 
 			</div>
-		  {%- if page -%} 
-		    {% for thread in page['threads'] %}
-
-		      <div class="thread clearfix">
-		        <div class="threadFirstPost">
-		          <div class="threadFirstPostImageWrapper">
-		              <img src="/thumb?height=125&width=125&fileId={{ thread['posts'][0].fileinfo['databaseId'] }}">
-		          </div>
-		          <div class="threadFirstPostRight">
-		            <div class="threadFirstPostTitle">
-            		<a href="">
-		              <span class="threadTitle">{{ thread['subject'] }}</span>
-           			</a>
-		            </div>
-		            <div class="threadFirstPostMessage">
-		              {{ thread['posts'][0].message }}
-		            </div>
-		          </div>
-		        </div>
-		      </div><!--/thread-->
-		    {% endfor %}
-		  {% endif %}
-		</div><!--/threadsWrapper--> 
+		    {% endfor %}	
+		</div>
 	</div>
 </div>
 {% endblock %}
