@@ -2,6 +2,10 @@ import redis
 
 keyFormat = 'active_user_{0}'
 activeRedisDB = redis.StrictRedis( '127.0.0.1', 6379 )
+friends_list_key = '_friends'
+admin_boards_list_key = '_admin_boards'
+mod_boards_list_key = '_mods_boards'
+private_boards_list_key = '_private_boards'
 
 def addUser(userId, email, username, passwordHash, isAdmin, reputation):
   user = {
@@ -34,5 +38,61 @@ def getUserInfo(userId):
   key = _activeKey(userId)
   return activeRedisDB.hgetall(key)
 
+
+#friends
+def getFriends(userId):
+  key = _activeKey(userId)
+  return activeRedisDB.lrange(key+friends_list_key, 0, -1)
+
+def addFriend(userId, friendId):
+  key = _activeKey(userId)
+  return activeRedisDB.lpush(key+friends_list_key, friendId)
+
+def removeFriend(userId, friendId):
+  key = _activeKey(userId)
+  pass
+
+
+
+#boards
+#-admin
+def getAdminBoards(userId):
+  key = _activeKey(userId)
+  return activeRedisDB.lrange(key+admin_boards_list_key, 0, -1)
+
+def addAdminBoard(userId, boardId):
+  key = _activeKey(userId)
+  activeRedisDB.lpush(key+admin_boards_list_key, boardId)
+  
+def removeAdminBoard(userId, boardId):
+  key = _activeKey(userId)
+  pass
+#-mods
+def getModBoards(userId):
+  key = _activeKey(userId)
+  return activeRedisDB.lrange(key+mod_boards_list_key, 0, -1)
+
+def addModBoard(userId, boardId):
+  key = _activeKey(userId)
+  activeRedisDB.lpush(key+mod_boards_list_key, boardId)
+
+def removeModBoard(userId, boardId):
+  key = _activeKey(userId)
+  pass
+#-private
+def getPrivateBoards(userId):
+  key = _activeKey(userId)
+  return activeRedisDB.lrange(key+private_boards_list_key, 0, -1)
+
+def addPrivateBoard(userId, boardId):
+  key = _activeKey(userId)
+  activeRedisDB.lpush(key+private_boards_list_key, boardId)
+
+def removePrivateBoard(userId, boardId):
+  key = _activeKey(userId)
+  pass
+
+
+#formats a key
 def _activeKey(userId):
   return keyFormat.format(userId)

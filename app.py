@@ -44,40 +44,16 @@ def showIndex():
 		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
 	if request.args.get('success') != None:
 		errors = [{'message':request.args.get('success'),'class':'bg-success'}]
-	print 'going in'
-	boardList = databaseFunctions.getAllBoardsPreview()
-	print 'boardList'
-	print boardList
+	
+	if login.current_user.is_authenticated():
+		boardList = databaseFunctions.getIndexPageInfoForUser(login.current_user.userId)
+	else:
+		boardList = databaseFunctions.getAllPublicBoardsPreview()
+
 	if request.args.get('error') != None:
 		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
 
 	return render_template("index.html", errors=errors, boardList=boardList)
-
-@app.route("/board/<boardId>/thread/<threadId>/post", methods=['POST'])
-def post(boardId, threadId):
-	if request.form.get('postContent') or (len(request.files) > 0 and request.files.get('photo') != None 
-			and request.files.get('photo').filename != ''):
-
-		if (request.form.get('postContent') != None 
-			and len(request.form.get('postContent')) > MAX_COMMENT_LENGTH):
-			return redirect('/boardId/'+boardId+'/thread/'+threadId+'?error=Error: Comment exceeded max length ('+str(MAX_COMMENT_LENGTH)+' characters).')
-
-		if (len(request.files) > 0 and request.files.get('photo') != None 
-			and request.files.get('photo').filename != ''):
-			status = filesAPI.handleUploadFormSubmit(request.files)
-			if not status['isValid']:
-				return redirect('/thread/'+threadId+'?error='+status['reason'])
-
-			fileId = databaseFunctions.addFileToDatabase(status['fileInfo'], "192.0.0.1")
-			databaseFunctions.createPost(boardId, threadId, 
-										request.form.get('postContent'), fileId)
-		else:
-			databaseFunctions.createPost(boardId, threadId, 
-										request.form.get('postContent'))
-
-		return redirect('/board/'+boardId+'/thread/'+threadId)
-	else:
-		return redirect('/board/'+boardId+'/thread/'+threadId+'?error=Error: Comment was empty.')
 
 @app.route("/board/<boardId>/thread/<threadId>")
 @app.route("/board/<boardId>/thread/<threadId>/")
@@ -92,6 +68,37 @@ def showThread(threadId,boardId,errors=[]):
 	boardName = databaseFunctions.getBoardName(boardId)
 	return render_template("thread.html", boardName=boardName, boardId=boardId, 
 							thread=thread, threadId=threadId,errors=errors)
+
+@app.route("/board/<boardId>/thread/<threadId>/post", methods=['POST'])
+def post(boardId, threadId):
+	if request.form.get('postContent') or (len(request.files) > 0 and request.files.get('photo') != None 
+			and request.files.get('photo').filename != ''):
+
+		if (request.form.get('postContent') != None 
+			and len(request.form.get('postContent')) > MAX_COMMENT_LENGTH):
+			return redirect('/boardId/'+boardId+'/thread/'+threadId+'?error=Error: Comment exceeded max length ('+str(MAX_COMMENT_LENGTH)+' characters).')
+
+		if login.current_user.is_authenticated():
+			creatorId = login.current_user.userId;
+		else:
+			creatorId = None
+
+		if (len(request.files) > 0 and request.files.get('photo') != None 
+			and request.files.get('photo').filename != ''):
+			status = filesAPI.handleUploadFormSubmit(request.files)
+			if not status['isValid']:
+				return redirect('/thread/'+threadId+'?error='+status['reason'])
+
+			fileId = databaseFunctions.addFileToDatabase(status['fileInfo'], "192.0.0.1")
+			databaseFunctions.createPost(boardId, threadId, 
+										request.form.get('postContent'), fileId, creatorId=creatorId)
+		else:
+			databaseFunctions.createPost(boardId, threadId, 
+										request.form.get('postContent'), creatorId=creatorId)
+
+		return redirect('/board/'+boardId+'/thread/'+threadId)
+	else:
+		return redirect('/board/'+boardId+'/thread/'+threadId+'?error=Error: Comment was empty.')
 
 @app.route('/<boardId>/threadSubmit', methods=['POST'])
 def threadSubmitPage(boardId):
@@ -114,9 +121,14 @@ def threadSubmitPage(boardId):
 		if not status['isValid']:
 			return redirect('/?error='+status['reason'])
 
+		if login.current_user.is_authenticated():
+			creatorId = login.current_user.userId
+		else:
+			creatorId = None
+
 		fileId = databaseFunctions.addFileToDatabase(status['fileInfo'], "192.0.0.1")
 		threadId = databaseFunctions.createThread(boardId, request.form['subject'], 
-												request.form['comment'], fileId)
+												request.form['comment'], fileId, creatorId=creatorId)
 		return redirect('/')
 	else:
 		return redirect('/')#pass it here and pass on an error message
@@ -139,8 +151,6 @@ def loginSubmitPage():
 	#make sure they're non empty
 
 	status = loginLogic.loginUser(userStringId, password)
-	print 'status'
-	print status
 	if not status['isValid']:
 		return redirect('/login?error='+status['reason'])
 
@@ -184,8 +194,12 @@ def createNewGroupSubmitPage():
 	if groupName == None:
 		return redirect('/createNewGroup?error=Error: Invalid Group Name')
 
+	isPrivate = request.form.get("privateGroup")
+
+	isPrivate = (isPrivate == 'True')
+
 	#create a new board
-	databaseFunctions.createBoard(groupName)
+	databaseFunctions.createBoard(groupName, isPrivate, login.current_user.userId)
 	return redirect('/')
 
 @app.route('/<boardId>/createNewConv')
@@ -245,6 +259,7 @@ def getThreadPreview(boardId, threadId):
 	thread['posts'].extend( databaseFunctions.getPostsRange(boardId, threadId, -5, -1) )
 
 	return thread
+
 
 #not used, using javascript instead
 ##insert a <wbr></wbr> every n chars

@@ -13,8 +13,10 @@ def getBoardPostCount(boardId):
 	key = _boardKey(boardId)
 	return boardRedisDB.get(key+board_post_key)
 
-def addBoard(boardId, name):
+def addBoard(boardId, name, isPrivate, adminId):
 	boardInfo = {
+		'admin': adminId,
+		'isPrivate': isPrivate,
 		'name': name,
 		'threadCount':'0'
 	}

@@ -1,3 +1,4 @@
+from sets import Set
 import postDatabase
 import threadDatabase
 import boardDatabase
@@ -11,25 +12,23 @@ def getNewId():
 	globalDatabase.incrementGlobalCount()
 	return str(globalDatabase.getGlobalCount())
 
-def createBoard(name):
+def createBoard(name, isPrivate, adminId):
 	globalDatabase.incrementGlobalCount()
 	boardId = globalDatabase.getGlobalCount()
 	globalDatabase.addBoardIdToBoardList(boardId)
-	boardDatabase.addBoard(boardId, name)
+	#add it to the admins board list
+	userDatabase.addAdminBoard(adminId, boardId)
+
+	if not isPrivate:
+		globalDatabase.addBoardIdToPublicBoardList(boardId)
+
+	boardDatabase.addBoard(boardId, name, isPrivate, adminId)
 	return boardId
 
 def getAllBoards():
 	result = []
 	for boardId in globalDatabase.getBoardList():
 		result.append(getBoardInfo(boardId))
-
-	return result
-
-def getAllBoardsPreview():
-	result = []
-
-	for boardId in globalDatabase.getBoardList():
-		result.append(getBoardInfoPreview(boardId))
 
 	return result
 
@@ -58,21 +57,6 @@ def getBoardInfo(boardId):
 	board['boardId'] = boardId
 	return board
 
-#get the board info along with the OP post all the threads in that board
-def getBoardInfoPreview(boardId):
-	threadIds = boardDatabase.getBoardThreadListAll(boardId)
-	threads = []
-	for threadId in threadIds:
-		thread = threadDatabase.getThreadInfo(boardId, threadId)
-		thread['posts'] = getPostsRange(boardId, threadId, 0, 0)
-		threads.append(thread)
-
-	board = boardDatabase.getBoardInfo(boardId)
-	board['boardId'] = boardId
-	board['threads'] = threads
-	return board
-
-
 def addFileToDatabase(fileInfo, creatorIP):
 	globalDatabase.incrementFileCount()
 	fileId = globalDatabase.getFileCount()
@@ -97,6 +81,14 @@ def getPost(boardId, postId):
 	#also get the file info
 	postInfo = postDatabase.getPost(boardId, postId)
 	fileId = postInfo['attachedFileId']
+	#convert the creatorId into a name (either username or anonymouse)
+	userId = postInfo.get('creatorId');
+	if userId == 'NULL':
+		postInfo['creatorName'] = 'Anonymouse'
+	else:
+		userData = userDatabase.getUserInfo(userId)
+		postInfo['creatorName'] = userData['username']
+
 	if fileId != "" and fileId != None and fileId != 'NULL':
 		fileInfo = fileDatabase.getFileInfo(fileId)
 		postInfo['fileinfo'] = fileInfo
@@ -199,3 +191,49 @@ def getAllPendingUsers():
 		result.append( temp )
 
 	return result
+
+
+
+######      #      #####   #######       #####   #######  #     # 
+#     #    # #    #     #  #            #     #  #        ##    # 
+#     #   #   #   #        #            #        #        # #   # 
+######   #     #  #  ####  #####        #  ####  #####    #  #  # 
+#        #######  #     #  #            #     #  #        #   # # 
+#        #     #  #     #  #            #     #  #        #    ## 
+#        #     #   #####   #######       #####   #######  #     # 
+
+
+#get the board info along with the OP post all the threads in that board
+def getBoardInfoPreview(boardId):
+	threadIds = boardDatabase.getBoardThreadListAll(boardId)
+	threads = []
+	for threadId in threadIds:
+		thread = threadDatabase.getThreadInfo(boardId, threadId)
+		thread['posts'] = getPostsRange(boardId, threadId, 0, 0)
+		threads.append(thread)
+
+	board = boardDatabase.getBoardInfo(boardId)
+	board['boardId'] = boardId
+	board['threads'] = threads
+	return board
+
+def getAllBoardsPreview(boardList):
+	if boardList == None:
+		return []
+
+	result = []
+	for boardId in boardList:
+		result.append(getBoardInfoPreview(boardId))
+	return result
+
+def getAllPublicBoardsPreview():
+	boardList = globalDatabase.getPublicBoardList()
+	return getAllBoardsPreview(boardList)
+
+def getIndexPageInfoForUser(userId):
+	boardList  = set(globalDatabase.getPublicBoardList())
+	boardList |= set(userDatabase.getAdminBoards(userId))
+	boardList |= set(userDatabase.getModBoards(userId))
+	boardList |= set(userDatabase.getPrivateBoards(userId))
+	
+	return getAllBoardsPreview(boardList)

@@ -7,6 +7,7 @@ file_count_key 	= 'file_count'
 
 global_count_key = 'global_count'
 board_list_key = 'board_list'
+public_board_list_key = 'public_board_list'
 
 def getBoardList():
 	return globalRedisDB.lrange(board_list_key, 0, -1)
@@ -14,20 +15,26 @@ def getBoardList():
 def addBoardIdToBoardList(boardId):
 	globalRedisDB.lpush(board_list_key, boardId)
 
-def removeBoardList(boardId):
+def removeBoardIdFromBoardList(boardId):
 	pass
+
+def getPublicBoardList():
+	return globalRedisDB.lrange(public_board_list_key, 0, -1)
+
+def addBoardIdToPublicBoardList(boardId):
+	globalRedisDB.lpush(public_board_list_key, boardId)
 
 def getGlobalCount():
 	if globalRedisDB.get(global_count_key) == None:
 		globalRedisDB.set(global_count_key, 0)
 
 	return int(globalRedisDB.get(global_count_key))
-	
+
 def incrementGlobalCount():
 	globalRedisDB.incr(global_count_key)
 
 def getFileCount():
 	return globalRedisDB.get(file_count_key)
-	
+
 def incrementFileCount():
 	globalRedisDB.incr(file_count_key)

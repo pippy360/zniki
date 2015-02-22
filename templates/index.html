@@ -82,7 +82,9 @@
 	<div class="content clearfix">
 		<div class="groupsMenu">
 			<div class="createNewGroupWrapper clearfix">
-				<span class="createNewGroup"><a href="/createNewGroup" >Create New Group</a></span>
+				{% if current_user.is_authenticated() %}
+					<span class="createNewGroup"><a href="/createNewGroup" >Create New Group</a></span>
+				{% endif %}
 			</div>
 			<ul>
 				{% for board in boardList %}
@@ -115,7 +117,7 @@
 					          <div class="threadFirstPostRight">
 					            <div class="threadFirstPostTitle">
 			            		<a href="/board/{{board['boardId']}}/thread/{{thread['threadId']}}">
-					              <span class="threadTitle">{{ thread['subject'] }}</span>
+					              <span class="threadTitle">{{ thread['subject'] }} - by {{thread['posts'][0].creatorName}}</span>
 			           			</a>
 					            </div>
 					            <div class="threadFirstPostMessage">

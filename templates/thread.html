@@ -10,18 +10,6 @@
 
 {% block content %}
 
-<div class="formWrapper">
-  <span class="formsTitle">Add Post</span>
-  <div class="newThreadForm">
-    <form action="/board/{{boardId}}/thread/{{threadId}}/post" method="post"  enctype="multipart/form-data">
-      <span class="threadSubTitle">Comment:</span>
-      <textarea name="postContent" class=""></textarea>
-      <span class="threadSubTitle">File:</span>
-      <input name="photo" type="file">
-      <input class="submitButton" type="submit">
-    </form>
-  </div>
-</div>
 <div class="threadsWrapper">
   <div class="thread clearfix">
     <div class="threadFirstPost">
@@ -32,7 +20,7 @@
       </div>
       <div class="threadFirstPostRight">
         <div class="threadFirstPostTitle">
-          <span class="threadTitle">{{ thread['subject'] }}</span> - Thread id: {{ thread['threadId'] }}
+          <span class="threadTitle">{{ thread['subject'] }}</span> - Thread id: {{ thread['threadId'] }} by {{thread['posts'][0].creatorName}}
         </div>
         <blockqoute class="threadFirstPostMessage">
           {{ thread['posts'][0].message }}
@@ -43,16 +31,21 @@
       {% if post != thread['posts'][0] %}
         <div class="postWrapper">
           <div class="post">
-            <div class="postImageWrapper">
-              {% if post.attachedFileId != 'NULL' %}
-                <a href="/static/storage/{{post.fileinfo['filename']}}">
-                  <img class="postImage" src="/thumb?height=125&width=125&fileId={{ post.attachedFileId }}">
-                </a>
-              {% endif %}
+            <div class="postHeader">
+              <span class="postHeaderSpan postHeaderUsername">{{post.creatorName}} -</span><span class="postHeaderSpan postHeaderPostId">Post id: {{post.postId}}</span>
             </div>
-            <div class="postMessageWrapper">
-              <div class="postMessage">
-                {{ post.message }}
+            <div class="postContents clearfix">
+              <div class="postImageWrapper">
+                {% if post.attachedFileId != 'NULL' %}
+                  <a href="/static/storage/{{post.fileinfo['filename']}}">
+                    <img class="postImage" src="/thumb?height=125&width=125&fileId={{ post.attachedFileId }}">
+                  </a>
+                {% endif %}
+              </div>
+              <div class="postMessageWrapper">
+                <div class="postMessage">
+                  {{ post.message }}
+                </div>
               </div>
             </div>
           </div>
@@ -60,5 +53,15 @@
       {% endif %}
     {% endfor %}
   </div><!--/thread-->
+  <div class="formWrapper">
+    <div class="newThreadForm">
+      <form action="/board/{{boardId}}/thread/{{threadId}}/post" method="post"  enctype="multipart/form-data">
+        <textarea name="postContent" class=""></textarea>
+        <span class="threadSubTitle">File:</span>
+        <input name="photo" type="file">
+        <input class="submitButton" type="submit">
+      </form>
+    </div>
+  </div>
 </div><!--/threadsWrapper--> 
 {% endblock %}
