@@ -1,4 +1,4 @@
-/static/storage/
-/tempFileStore/
+/static/storage/*
+/tempFileStore/*
 *.pyc
 */*.pyc

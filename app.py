@@ -76,7 +76,8 @@ def post(boardId, threadId):
 
 		if (request.form.get('postContent') != None 
 			and len(request.form.get('postContent')) > MAX_COMMENT_LENGTH):
-			return redirect('/boardId/'+boardId+'/thread/'+threadId+'?error=Error: Comment exceeded max length ('+str(MAX_COMMENT_LENGTH)+' characters).')
+			return redirect('/boardId/'+boardId+'/thread/'+threadId+
+				'?error=Error: Comment exceeded max length ('+str(MAX_COMMENT_LENGTH)+' characters).')
 
 		if login.current_user.is_authenticated():
 			creatorId = login.current_user.userId;
@@ -133,57 +134,6 @@ def threadSubmitPage(boardId):
 	else:
 		return redirect('/')#pass it here and pass on an error message
 
-
-@app.route('/login')
-def loginPage():
-	errors = []
-	if request.args.get('error') != None:
-		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
-	if request.args.get('success') != None:
-		errors = [{'message':request.args.get('success'),'class':'bg-success'}]
-	return render_template('login.html', errors=errors)
-
-@app.route('/loginSubmit', methods=['POST'])
-def loginSubmitPage():
-	userStringId = request.form.get('input_usernameLogin')
-	password 	 = request.form.get('input_passwordLogin')
-
-	#make sure they're non empty
-
-	status = loginLogic.loginUser(userStringId, password)
-	if not status['isValid']:
-		return redirect('/login?error='+status['reason'])
-
-	return redirect('/')
-
-#FIXME: MORE CHECKING HERE !!!
-@app.route('/signUpSubmit', methods=['POST'])
-def signUpSubmitPage():
-	username 	 = request.form.get('input_usernameSignup')
-	password1 	 = request.form.get('input_passwordSignup1')
-	password2 	 = request.form.get('input_passwordSignup2')
-	email 	 	 = request.form.get('input_emailSignup')
-	
-	if username == None or username == '':
-		return redirect('/login?error=Error: Invalid username')
-	elif password1 == None or password1 == '':
-		return redirect('/login?error=Error: Invalid Password')
-	elif email == None or email == '':
-		return redirect('/login?error=Error: Invalid Email')
-	elif not password1 == password2:
-		return redirect('/login?error=Error: Passwords did not match')
-	else:
-		returnCode = databaseFunctions.addUser(email, username, password1, 0)
-		if returnCode == -1:
-			return redirect('/login?error=Error: Username Taken')
-		elif returnCode == -2:
-			return redirect('/login?error=Error: Email Taken')
-
-		loginLogic.loginUser(username, password1)
-		return redirect('/?success=Success: Account created !')
-
-	return redirect('/login?error=Error: Sign up failed')
-
 @app.route('/createNewGroup')
 def createNewGroupPage():
 	return render_template('createNewGroup.html')
@@ -195,11 +145,49 @@ def createNewGroupSubmitPage():
 		return redirect('/createNewGroup?error=Error: Invalid Group Name')
 
 	isPrivate = request.form.get("privateGroup")
-
 	isPrivate = (isPrivate == 'True')
 
 	#create a new board
 	databaseFunctions.createBoard(groupName, isPrivate, login.current_user.userId)
+	return redirect('/')
+
+@app.route('/<boardId>/addUsersSubmit', methods=['POST'])
+@login.login_required
+def addUsersSubmitPage(boardId):
+	newUser = request.form.get("input_newUser")
+	newUserId = databaseFunctions.getUserIdFromIdString(newUser)
+	if newUserId == None:
+		return redirect('/'+boardId+'/settings?error=Error: Bad new user name')
+
+	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	if boardInfo == None:
+		return redirect('/'+boardId+'/settings?error=Error: Invalid board Id')
+
+	if login.current_user.userId == boardInfo['adminId'] and boardInfo['isPrivate'] == 'True':
+		databaseFunctions.addUserToBoard(newUserId, boardId)
+		return redirect('/'+boardId+'/settings?success=Success: user added')
+	else:
+		return redirect('/'+boardId+'/settings?error=Error: You are not an admin of this board')
+
+	return redirect('/')
+
+@app.route('/<boardId>/addModsSubmit', methods=['POST'])
+def addModsSubmitPage(boardId):
+	newMod = request.form.get("input_newMod")
+	newModId = databaseFunctions.getUserIdFromIdString(newMod)
+	if newModId == None:
+		return redirect('/'+boardId+'/settings?error=Error: Bad new user name')
+
+	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	if boardInfo == None:
+		return redirect('/'+boardId+'/settings?error=Error: Invalid board Id')
+
+	if login.current_user.userId == boardInfo['adminId'] and boardInfo['isPrivate'] == 'True':
+		databaseFunctions.addModToBoard(newModId, boardId)
+		return redirect('/'+boardId+'/settings?success=Success: mod added')
+	else:
+		return redirect('/'+boardId+'/settings?error=Error: You are not an admin of this board')
+
 	return redirect('/')
 
 @app.route('/<boardId>/createNewConv')
@@ -273,6 +261,35 @@ def getThreadPreview(boardId, threadId):
 #	return posts
 
 
+ #####                              
+#     # #####   ####  #    # #####  
+#       #    # #    # #    # #    # 
+#  #### #    # #    # #    # #    # 
+#     # #####  #    # #    # #####  
+#     # #   #  #    # #    # #      
+ #####  #    #  ####   ####  #      
+
+
+@app.route('/<boardId>/changeGroupNameSubmit', methods=['post'])
+def changeGroupNameSubmitPage(boardId):
+	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	newName   = request.form.get('input_newName')
+	if login.current_user.userId == boardInfo['adminId']:
+		databaseFunctions.changeBoardName(boardId, newName)
+		return redirect('/'+boardId+'/settings')
+	else:
+		return redirect('/')
+
+@app.route('/<boardId>/changeGroupPasswordSubmit', methods=['post'])
+def changeGroupPasswordSubmitPage(boardId):
+	boardInfo   = databaseFunctions.getBoardInfo(boardId)
+	newPassword = request.form.get('input_newPassword')
+	if login.current_user.userId == boardInfo['adminId']:
+		databaseFunctions.changeBoardPassword(boardId, newPassword)
+		return redirect('/'+boardId+'/settings')
+	else:
+		return redirect('/')
+
 
 #     #   #####   #######  ######  
 #     #  #     #  #        #     # 
@@ -282,6 +299,58 @@ def getThreadPreview(boardId, threadId):
 #     #  #     #  #        #    #  
  #####    #####   #######  #     # 
 
+
+@app.route('/login')
+def loginPage():
+	errors = []
+	if request.args.get('error') != None:
+		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
+	if request.args.get('success') != None:
+		errors = [{'message':request.args.get('success'),'class':'bg-success'}]
+	return render_template('login.html', errors=errors)
+
+@app.route('/loginSubmit', methods=['POST'])
+def loginSubmitPage():
+	userStringId = request.form.get('input_usernameLogin')
+	password 	 = request.form.get('input_passwordLogin')
+
+	#make sure they're non empty
+
+	status = loginLogic.loginUser(userStringId, password)
+	if not status['isValid']:
+		return redirect('/login?error='+status['reason'])
+
+	return redirect('/')
+
+#FIXME: MORE CHECKING HERE !!!
+@app.route('/signUpSubmit', methods=['POST'])
+def signUpSubmitPage():
+	username 	 = request.form.get('input_usernameSignup')
+	password1 	 = request.form.get('input_passwordSignup1')
+	password2 	 = request.form.get('input_passwordSignup2')
+	email 	 	 = request.form.get('input_emailSignup')
+	
+	if username == None or username == '':
+		return redirect('/login?error=Error: Invalid username')
+	elif password1 == None or password1 == '':
+		return redirect('/login?error=Error: Invalid Password')
+	elif email == None or email == '':
+		return redirect('/login?error=Error: Invalid Email')
+	elif not password1 == password2:
+		return redirect('/login?error=Error: Passwords did not match')
+	else:
+		returnCode = databaseFunctions.addUser(email, username, password1, 0)
+		if returnCode == -1:
+			return redirect('/login?error=Error: Username Taken')
+		elif returnCode == -2:
+			return redirect('/login?error=Error: Email Taken')
+
+		loginLogic.loginUser(username, password1)
+		return redirect('/?success=Success: Account created !')
+
+	return redirect('/login?error=Error: Sign up failed')
+
+
 @app.route('/dashboard')
 @login.login_required
 def dashboardPage(errors=[]):
@@ -290,13 +359,53 @@ def dashboardPage(errors=[]):
 		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
 	if request.args.get('success') != None:
 		errors = [{'message':request.args.get('success'),'class':'bg-success'}]
-	return render_template('dashboard.html',errors=errors)
+	return render_template('dashboard.html',errors=errors, 
+							emails=databaseFunctions.getAllEmails(),
+							usernames=databaseFunctions.getAllUsernames(),
+							friends=databaseFunctions.getFriends(login.current_user.userId))
+
+@app.route('/addFriend', methods=['POST'])
+@login.login_required
+def addFriendPage():
+	friendStringId = request.form.get('friendStringId')
+	if friendStringId == None or friendStringId == '':
+		return redirect('/dashboard?friends=1&error=Error: Invalid Friend Id')
+
+	returnCode = databaseFunctions.addFriend(login.current_user.userId, friendStringId)
+	if returnCode == 0:
+		return redirect('/dashboard?friends=1&success=Success: Friend Added')
+	elif returnCode == -1:
+		return redirect('/dashboard?friends=1&error=Error: User Doesn\' exist')
+	elif returnCode == -2:
+		return redirect('/dashboard?friends=1&error=Error: That user is already your friend')
+	else:
+		return redirect('/dashboard?friends=1&error=Error: Something weird happened O_o')
 
 @app.route('/logout')
 @login.login_required
 def logoutPage(errors=[]):
 	login.logout_user()
 	return redirect('/?success=You are now logged out')
+
+#build the settings
+@app.route('/<boardId>/settings')
+@login.login_required
+def settingsPage(boardId,errors=[]):
+	#make sure the user is the admin, render them the settings page
+	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	if boardInfo == None:
+		return redirect('/?error=Error: Invalid board Id')
+
+	if login.current_user.userId == boardInfo['adminId']:
+		return render_template('groupSettings.html', isAdmin=True, boardId=boardId,
+								boardName=boardInfo['name'],
+								mods =databaseFunctions.getAllBoardMods(boardId),
+								users=databaseFunctions.getAllBoardUsers(boardId))
+
+	elif login.current_user.userId in boardInfo['mods']:
+		return render_template('groupSettings.html', isAdmin=False, boardId=boardId)
+	else:
+		return redirect('/?error=Error: mods and admins ONLY')
 
 @app.route('/changeUsername')
 @login.login_required
@@ -373,6 +482,14 @@ def changePasswordSubmitPage():
 		return redirect('/dashboard?success=Success: Password Changed')
 	else:
 		return redirect('/dashboard?error=Error: Password Change Failed, darn it :(')
+
+@app.route('/deleteAccount')
+@login.login_required
+def deleteAccountPage():
+	databaseFunctions.removeUser(login.current_user.userId)
+	login.logout_user()
+	return redirect('/')
+
 
 
 def init_login():

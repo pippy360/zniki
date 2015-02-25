@@ -74,6 +74,12 @@
 .threadTitle{
 	color: #337ab7;
 }
+.threadCreatorName{
+	color: #757575;
+}
+.glyphicon-cog{
+	font-size: 30px;
+}
     </style>
 {% endblock %}
 
@@ -106,7 +112,11 @@
 				<div class="threadsWrapper">
 						
 						<div class="createNewThreadWrapper clearfix">
-							<div class="createNewThread"><a href="/{{board['boardId']}}/createNewConv">Create New Conversation</a></div>
+							<div class="createNewThread">
+								<a href="/{{board['boardId']}}/createNewConv" class="pull-right">Create New Conversation</a>
+								<br>
+								<a href="/{{board['boardId']}}/settings" class="pull-right glyphicon glyphicon-cog"></a>
+							</div>
 						</div>
 				    {% for thread in board['threads'] %}
 					      <div class="thread clearfix">
@@ -117,8 +127,8 @@
 					          <div class="threadFirstPostRight">
 					            <div class="threadFirstPostTitle">
 			            		<a href="/board/{{board['boardId']}}/thread/{{thread['threadId']}}">
-					              <span class="threadTitle">{{ thread['subject'] }} - by {{thread['posts'][0].creatorName}}</span>
-			           			</a>
+					              <span class="threadTitle">{{ thread['subject'] }}</span></a><span class="threadCreatorName"> - by {{thread['posts'][0].creatorName}}</span>
+			           			
 					            </div>
 					            <div class="threadFirstPostMessage">
 					              {{ thread['posts'][0].message }}

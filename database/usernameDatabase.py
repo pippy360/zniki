@@ -13,7 +13,7 @@ def addUsername(username, userId):
 	usernameRedisDB.set(key, userId)
 
 def removeUsername(username):
-	usernameRedisDB.lrem(username_list_key, username)
+	usernameRedisDB.lrem(username_list_key, 0, username)
 	key = _usernameKey(username)
 	usernameRedisDB.delete(key)
 

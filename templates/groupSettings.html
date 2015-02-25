@@ -1,0 +1,131 @@
+{% extends "baseLayout.html" %}
+
+{% block topLink %}
+<a href='/' class="topbarLink"> {{boardName}}</a>  > <a href='/thread/{{ thread['threadId'] }}' class="topbarLink"> Thread {{ thread['threadId'] }} </a>
+{% endblock %}
+
+{% block head %}
+    <link href="/static/threadStyle.css" rel="stylesheet">
+    <style type="text/css">
+.content{
+  width: 570px;
+  margin:auto;
+}
+.tab-pane{
+  padding: 40px;
+}
+.addFriendInput{
+  width: 400px;
+  float: left;
+}
+.addFriendSubmit{
+  margin-left: 10px;
+  width: 100px;
+  float: left;
+}
+.textInput{
+  margin-right: 10px;
+  width: 450px;
+  display: inline-block;
+}
+.settingsSubmitButton{
+  width: 100px;
+  display: inline-block;
+}
+.settingsLabel{
+  display: block;
+}
+.bigListLabel{
+  border-bottom: 1px solid #ddd;
+  font-size: 18px;
+}
+.pageTitle{
+  position: relative;
+  width: 600px;
+  margin: auto;
+}
+    </style>
+{% endblock %}
+
+{% block content %}
+  <h2 class="pageTitle">Settings For "{{boardName}}"</h2>
+<div class="content">
+  <br>
+{% if isAdmin %}
+  <br>
+  <div><a href="/{{boardId}}/makePrivate">Make Group Private</a></div>
+  <br>
+  <form action="/{{boardId}}/changeGroupNameSubmit" method="post">
+    <label class="settingsLabel">Change Name</label>
+    <input type="text" name="input_newName" class="form-control textInput" placeholder="Group Name">
+    <input class="settingsSubmitButton form-control" type="submit">
+  </form>
+  <br>
+  <form action="/{{boardId}}/changeGroupPasswordSubmit" method="post">
+    <label class="settingsLabel">Change Password</label>
+    <input type="text" name="input_newPassword" class="form-control textInput" placeholder="New Password">
+    <input class="settingsSubmitButton form-control" type="submit">
+  </form>
+  <br>
+  <br>
+  <form action="/{{boardId}}/addModsSubmit" method="post">
+    <label class="settingsLabel bigListLabel">Moderators</label>
+  <br>
+    <input type="text" class="form-control textInput" placeholder="Add Moderator">
+    <input class="settingsSubmitButton form-control" type="submit">
+  </form>
+  <br>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Username</th>
+          <th>Add Users</th>
+          <th>Kick Users</th>
+          <th>Remove Posts</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for mod in mods %}
+        <tr>
+          <th scope="row">{{loop.index}}</th>
+          <td>{{mod.userInfo['username']}}</td>
+          <td>{{mod.addUsers}}</td>
+          <td>{{mod.kickUsers}}</td>
+          <td>{{mod.removePosts}}</td>
+          <td><a href="">Remove Mod</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+{% endif %}
+  <br>
+
+<form action="/{{boardId}}/addUsersSubmit" method="post">
+    <label class="settingsLabel bigListLabel">Users</label>
+  <br>
+    <input type="text" class="form-control textInput" placeholder="Add User">
+    <input class="settingsSubmitButton form-control" type="submit">
+  </form>
+  <br>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Username</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <th scope="row">{{loop.index}}</th>
+          <td>{{user['username']}}</td>
+          <td><a href="">Remove User</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+</div>
+{% endblock %}
+
+

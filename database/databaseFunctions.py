@@ -112,6 +112,44 @@ def getPostsRange(boardId, threadId, start, end):
 
 	return result
 
+def addModToBoard(newModId, boardId):
+	boardDatabase.addBoardMod(boardId, newModId)
+	userDatabase.addModBoard(newModId, boardId)
+	print 'add to both, print out their lists now'
+	print userDatabase.getModBoards(newModId)
+	print boardDatabase.getAllBoardMods(boardId)
+
+
+def addUserToBoard(newUserId, boardId):
+	boardDatabase.addBoardUser(boardId, newUserId)
+	userDatabase.addPrivateBoard(newUserId, boardId)
+	print 'add to both, print out their lists now'
+	print userDatabase.getModBoards(newUserId)
+	print boardDatabase.getAllBoardMods(boardId)
+
+def getAllBoardMods(boardId):
+	result = []
+	modIdsList = boardDatabase.getModsIdsList(boardId)
+	for modId in modIdsList:
+		mod = boardDatabase.getModsPermissions(boardId, modId)
+		mod['userInfo'] = getUserInfo(modId)
+		result.append(mod)
+
+	return result
+
+def getAllBoardUsers(boardId):
+	result = []
+	userIdsList = boardDatabase.getAllBoardUsers(boardId)
+	for userId in userIdsList:
+		result.append(getUserInfo(userId))
+
+	return result
+
+def changeBoardName(boardId, newName):
+	boardDatabase.changeBoardName(boardId, newName)
+
+def changeBoardPassword(boardId, newName):
+	boardDatabase.changeBoardPassword(boardId, newName)
 
 #     #   #####   #######  ######  
 #     #  #     #  #        #     # 
@@ -142,6 +180,29 @@ def changeEmail(userId, newEmail):
 	userDatabase.changeEmail(userId, newEmail)
 	emailDatabase.addEmail(newEmail, userId)
 
+#returns 0 on success, 
+#returns -1 if the username/email doens't exist
+#returns -2 if you guys are already friends
+def addFriend(userId, friendStringId):
+	#make sure the username/email exists
+	friendId = usernameDatabase.getUsernameUserId(friendStringId)
+	if friendId == None: 
+		friendId = emailDatabase.getEmailUserId(friendStringId)
+		if friendId == None:
+			return -1
+	elif friendId in userDatabase.getFriends(userId):
+		return -2
+
+	userDatabase.addFriend(userId, friendId)
+	return 0
+
+def getFriends(userId):
+	result = []
+	for tempId in userDatabase.getFriends(userId):
+		result.append(userDatabase.getUserInfo(tempId))
+
+	return result
+
 def changePasswordHash(userId, newPasswordHash):
 	userDatabase.changePasswordHash(userId, newPasswordHash)
 
@@ -151,8 +212,16 @@ def getUsernameUserId(username):
 def getUserInfo(userId):
 	return userDatabase.getUserInfo(userId)
 
-def getUserInfo(userId):
-	return userDatabase.getUserInfo(userId)
+def getUserIdFromIdString(idString):
+	userId = usernameDatabase.getUsernameUserId(idString)
+	if userId == None: 
+		userId = emailDatabase.getEmailUserId(idString)
+		if userId == None:
+			return None
+	return userId	
+
+def getUserInfoFromIdString(idString):
+	return getUserInfo(getUserIdFromIdString(idString))
 
 def getEmailUserId(email):
 	return emailDatabase.getEmailUserId(email)
@@ -165,6 +234,13 @@ def getProjectInfo(projectId):
 
 def getProjectCount():
 	return globalDatabase.getProjectCount()
+
+def getAllUsernames():
+	return usernameDatabase.getAllUsernames()
+
+def getAllEmails():
+	return emailDatabase.getAllEmails()
+
 
 #TODO: make this return status with the userId
 #return 0 if success, -1 if username already exists, -2 if email already exists
@@ -192,6 +268,13 @@ def getAllPendingUsers():
 
 	return result
 
+#TODO:FIXME:
+def removeUser(userId):
+	userInfo = getUserInfo(userId)
+	usernameDatabase.removeUsername(userInfo['username'])
+	emailDatabase.removeEmail(userInfo['email'])
+	userDatabase.removeUser(userId)
+	#go through the lists a user is part of and remove him
 
 
 ######      #      #####   #######       #####   #######  #     # 
