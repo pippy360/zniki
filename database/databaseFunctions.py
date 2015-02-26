@@ -55,6 +55,8 @@ def getBoardThreadCount(boardId):
 def getBoardInfo(boardId):
 	board = boardDatabase.getBoardInfo(boardId)
 	board['boardId'] = boardId
+	board['modsList'] = boardDatabase.getModsIdsList(boardId)
+	board['usersList'] = boardDatabase.getAllBoardUsers(boardId)
 	return board
 
 def addFileToDatabase(fileInfo, creatorIP):
@@ -87,7 +89,10 @@ def getPost(boardId, postId):
 		postInfo['creatorName'] = 'Anonymouse'
 	else:
 		userData = userDatabase.getUserInfo(userId)
-		postInfo['creatorName'] = userData['username']
+		if userData == {}:
+			postInfo['creatorName'] = 'Deleted'
+		else:
+			postInfo['creatorName'] = userData['username']
 
 	if fileId != "" and fileId != None and fileId != 'NULL':
 		fileInfo = fileDatabase.getFileInfo(fileId)
@@ -115,17 +120,10 @@ def getPostsRange(boardId, threadId, start, end):
 def addModToBoard(newModId, boardId):
 	boardDatabase.addBoardMod(boardId, newModId)
 	userDatabase.addModBoard(newModId, boardId)
-	print 'add to both, print out their lists now'
-	print userDatabase.getModBoards(newModId)
-	print boardDatabase.getAllBoardMods(boardId)
-
 
 def addUserToBoard(newUserId, boardId):
 	boardDatabase.addBoardUser(boardId, newUserId)
 	userDatabase.addPrivateBoard(newUserId, boardId)
-	print 'add to both, print out their lists now'
-	print userDatabase.getModBoards(newUserId)
-	print boardDatabase.getAllBoardMods(boardId)
 
 def getAllBoardMods(boardId):
 	result = []
@@ -150,6 +148,18 @@ def changeBoardName(boardId, newName):
 
 def changeBoardPassword(boardId, newName):
 	boardDatabase.changeBoardPassword(boardId, newName)
+
+def getModsPermissions(boardId, modId):
+	return boardDatabase.getModsPermissions(boardId, modId)
+
+def removeModFromBoard(boardId, modId):
+	boardDatabase.removeBoardMod(boardId, modId)
+	userDatabase.removeModBoard(modId, boardId)
+
+def removeUserFromBoard(boardId, userId):
+	removeModFromBoard(boardId, userId)
+	boardDatabase.removeBoardUser(boardId, userId)
+	userDatabase.removePrivateBoard(userId, boardId)
 
 #     #   #####   #######  ######  
 #     #  #     #  #        #     # 
@@ -210,7 +220,9 @@ def getUsernameUserId(username):
 	return usernameDatabase.getUsernameUserId(username)
 
 def getUserInfo(userId):
-	return userDatabase.getUserInfo(userId)
+	result = userDatabase.getUserInfo(userId)
+	result['userId'] = userId
+	return result
 
 def getUserIdFromIdString(idString):
 	userId = usernameDatabase.getUsernameUserId(idString)
@@ -287,7 +299,7 @@ def removeUser(userId):
 
 
 #get the board info along with the OP post all the threads in that board
-def getBoardInfoPreview(boardId):
+def getBoardInfoPreview(boardId, currentUserId=None):
 	threadIds = boardDatabase.getBoardThreadListAll(boardId)
 	threads = []
 	for threadId in threadIds:
@@ -295,18 +307,34 @@ def getBoardInfoPreview(boardId):
 		thread['posts'] = getPostsRange(boardId, threadId, 0, 0)
 		threads.append(thread)
 
-	board = boardDatabase.getBoardInfo(boardId)
+	board = getBoardInfo(boardId)
 	board['boardId'] = boardId
 	board['threads'] = threads
+	board['userSettings'] = getBoardUserSettings(boardId, currentUserId)
+
 	return board
 
-def getAllBoardsPreview(boardList):
+def getBoardUserSettings(boardId, currentUserId=None):
+	result = {}
+	board = getBoardInfo(boardId)
+	if currentUserId != None:
+		if currentUserId == board['adminId']:
+			result['role'] = 'Admin'
+		elif currentUserId in board['modsList']:
+			result['role']  = 'Mod'
+			result['perms'] =  getModsPermissions(boardId, currentUserId)
+		else:
+			result['role'] = 'User'
+	else:
+		result['role'] = 'Anon'
+
+def getAllBoardsPreview(boardList, userId=None):
 	if boardList == None:
 		return []
 
 	result = []
 	for boardId in boardList:
-		result.append(getBoardInfoPreview(boardId))
+		result.append(getBoardInfoPreview(boardId, userId))
 	return result
 
 def getAllPublicBoardsPreview():
@@ -319,4 +347,4 @@ def getIndexPageInfoForUser(userId):
 	boardList |= set(userDatabase.getModBoards(userId))
 	boardList |= set(userDatabase.getPrivateBoards(userId))
 	
-	return getAllBoardsPreview(boardList)
+	return getAllBoardsPreview(boardList, userId)

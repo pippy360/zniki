@@ -54,7 +54,8 @@ def changeBoardPassword(boardId, newPass):
 	boardRedisDB.hset(key+'_info', 'password', newPass)
 
 def removeBoardUser(boardId, userId):
-	pass
+	key = _boardKey(boardId)
+	boardRedisDB.lrem(key+board_user_key, 0, userId)
 
 #mods
 
@@ -82,7 +83,9 @@ def addBoardMod(boardId, modId):
 	setModPermissions(boardId, modId)
 
 def removeBoardMod(boardId, modId):
-	pass
+	key = _boardKey(boardId)
+	boardRedisDB.delete(key+board_mod_key+modId)
+	boardRedisDB.lrem(key+board_mod_key_list, 0, modId)
 
 #threads
 def addThreadIdToThreadList(boardId, threadId):

@@ -38,26 +38,52 @@
 .bigListLabel{
   border-bottom: 1px solid #ddd;
   font-size: 18px;
+  width: 600px;
+  margin: auto;
 }
 .pageTitle{
   position: relative;
   width: 600px;
   margin: auto;
 }
+.publicPrivateToggle{
+  font-size: 18px;
+}
+.checkboxStyleTd{
+  text-align: center;
+}
+.checkboxStyle{
+  width:  14px;
+  height: 14px;
+  cursor: pointer;
+}
     </style>
 {% endblock %}
 
 {% block content %}
-  <h2 class="pageTitle">Settings For "{{boardName}}"</h2>
+{% if perm=='Admin' %}
+  <h2 class="pageTitle">"{{boardInfo['name']}}" settings</h2>
+{% else %}
+  <h2 class="pageTitle">"{{boardInfo['name']}}" user settings</h2>
+{% endif %}
 <div class="content">
   <br>
-{% if isAdmin %}
+{% if perm=='Admin' %}
   <br>
-  <div><a href="/{{boardId}}/makePrivate">Make Group Private</a></div>
+  <div>
+      <a class="publicPrivateToggle" href="/{{boardId}}/togglePrivate">Delete Group</a>
+      <br>
+      <br>
+    {% if boardInfo['isPrivate'] == 'True' %}
+      <a class="publicPrivateToggle" href="/{{boardId}}/togglePrivate">Make Group Public</a>
+    {% else %}
+      <a class="publicPrivateToggle" href="/{{boardId}}/togglePrivate">Make Group Private</a>
+    {% endif %}
+  </div>
   <br>
   <form action="/{{boardId}}/changeGroupNameSubmit" method="post">
     <label class="settingsLabel">Change Name</label>
-    <input type="text" name="input_newName" class="form-control textInput" placeholder="Group Name">
+    <input type="text" name="input_newName" class="form-control textInput" placeholder="New Name">
     <input class="settingsSubmitButton form-control" type="submit">
   </form>
   <br>
@@ -68,10 +94,12 @@
   </form>
   <br>
   <br>
+</div>
+<label class="settingsLabel bigListLabel">Moderators</label>
+<div class="content">
   <form action="/{{boardId}}/addModsSubmit" method="post">
-    <label class="settingsLabel bigListLabel">Moderators</label>
   <br>
-    <input type="text" class="form-control textInput" placeholder="Add Moderator">
+    <input type="text" class="form-control textInput" name="input_newMod" placeholder="Add Moderator">
     <input class="settingsSubmitButton form-control" type="submit">
   </form>
   <br>
@@ -90,22 +118,51 @@
         <tr>
           <th scope="row">{{loop.index}}</th>
           <td>{{mod.userInfo['username']}}</td>
-          <td>{{mod.addUsers}}</td>
-          <td>{{mod.kickUsers}}</td>
-          <td>{{mod.removePosts}}</td>
-          <td><a href="">Remove Mod</a></td>
+          {% if mod.addUsers == 'True' %}
+            <td class="checkboxStyleTd">
+              <input class="checkboxStyle" type="checkbox" name="vehicle" value="Car" checked>
+            </td>
+          {% else %}
+            <td class="checkboxStyleTd">
+              <input class="checkboxStyle" type="checkbox" name="vehicle" value="Car">
+            </td>
+          {% endif %}
+          {% if mod.kickUsers == 'True' %}
+            <td class="checkboxStyleTd">
+              <input class="checkboxStyle" type="checkbox" name="vehicle" value="Car" checked>
+            </td>
+          {% else %}
+            <td class="checkboxStyleTd">
+              <input class="checkboxStyle" type="checkbox" name="vehicle" value="Car">
+            </td>
+          {% endif %}
+          {% if mod.removePosts == 'True' %}
+            <td class="checkboxStyleTd">
+              <input class="checkboxStyle" type="checkbox" name="vehicle" value="Car" checked>
+            </td>
+          {% else %}
+            <td class="checkboxStyleTd">
+              <input class="checkboxStyle" type="checkbox" name="vehicle" value="Car">
+            </td>
+          {% endif %}
+          <td><a href="/{{boardId}}/removeMod/{{mod.userInfo['userId']}}">Remove Mod</a></td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
 {% endif %}
   <br>
+</div>
 
-<form action="/{{boardId}}/addUsersSubmit" method="post">
+{% if boardInfo['isPrivate'] == 'True' %}
     <label class="settingsLabel bigListLabel">Users</label>
+<div class="content">
+  <form action="/{{boardId}}/addUsersSubmit" method="post">
   <br>
-    <input type="text" class="form-control textInput" placeholder="Add User">
+  {% if perm=='Admin' or (perm=='Mod' and modPerms['addUsers'] == 'True') %}
+    <input type="text" class="form-control textInput" name="input_newUser" placeholder="Add User">
     <input class="settingsSubmitButton form-control" type="submit">
+  {% endif %}
   </form>
   <br>
     <table class="table table-striped">
@@ -120,11 +177,15 @@
         <tr>
           <th scope="row">{{loop.index}}</th>
           <td>{{user['username']}}</td>
-          <td><a href="">Remove User</a></td>
+        {% if perm=='Admin' or (perm=='Mod' and modPerms['kickUsers'] == 'True') %}
+          <td><a href="/{{boardId}}/kickUser/{{user['userId']}}">Kick User</a></td>
+        {% endif %}
         </tr>
         {% endfor %}
       </tbody>
     </table>
+</div>
+{% endif %}
 </div>
 {% endblock %}
 

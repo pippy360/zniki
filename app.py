@@ -157,17 +157,21 @@ def addUsersSubmitPage(boardId):
 	newUser = request.form.get("input_newUser")
 	newUserId = databaseFunctions.getUserIdFromIdString(newUser)
 	if newUserId == None:
-		return redirect('/'+boardId+'/settings?error=Error: Bad new user name')
+		return redirect('/'+boardId+'/settings?error=Error: The username "'+newUser+'" didn\'t match any users')
 
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
 	if boardInfo == None:
 		return redirect('/'+boardId+'/settings?error=Error: Invalid board Id')
 
-	if login.current_user.userId == boardInfo['adminId'] and boardInfo['isPrivate'] == 'True':
-		databaseFunctions.addUserToBoard(newUserId, boardId)
-		return redirect('/'+boardId+'/settings?success=Success: user added')
+	if (login.current_user.userId == boardInfo['adminId'] 
+			or login.current_user.userId in boardInfo['modsList']):
+		if boardInfo['isPrivate'] == 'True':
+			databaseFunctions.addUserToBoard(newUserId, boardId)
+			return redirect('/'+boardId+'/settings?success=Success: user added')
+		else:
+			return redirect('/'+boardId+'/settings?error=Error: Not a private board')
 	else:
-		return redirect('/'+boardId+'/settings?error=Error: You are not an admin of this board')
+		return redirect('/'+boardId+'/settings?error=Error: You are not an Admin or Mod of this board')
 
 	return redirect('/')
 
@@ -176,13 +180,13 @@ def addModsSubmitPage(boardId):
 	newMod = request.form.get("input_newMod")
 	newModId = databaseFunctions.getUserIdFromIdString(newMod)
 	if newModId == None:
-		return redirect('/'+boardId+'/settings?error=Error: Bad new user name')
+		return redirect('/'+boardId+'/settings?error=Error: The username "'+newMod+'" didn\'t match any users')
 
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
 	if boardInfo == None:
 		return redirect('/'+boardId+'/settings?error=Error: Invalid board Id')
 
-	if login.current_user.userId == boardInfo['adminId'] and boardInfo['isPrivate'] == 'True':
+	if login.current_user.get_id() == boardInfo['adminId'] :
 		databaseFunctions.addModToBoard(newModId, boardId)
 		return redirect('/'+boardId+'/settings?success=Success: mod added')
 	else:
@@ -290,6 +294,53 @@ def changeGroupPasswordSubmitPage(boardId):
 	else:
 		return redirect('/')
 
+@app.route('/<boardId>/togglePrivate')
+@login.login_required
+def togglePrivatePage(boardId,errors=[]):
+	boardInfo = databaseFunctions.getBoardInfo(boardId)
+
+@app.route('/<boardId>/settings')
+@login.login_required
+def settingsPage(boardId,errors=[]):
+	if request.args.get('error') != None:
+		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
+	if request.args.get('success') != None:
+		errors = [{'message':request.args.get('success'),'class':'bg-success'}]
+
+	#make sure the user is the admin, render them the settings page
+	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	if boardInfo == None:
+		return redirect('/?error=Error: Invalid board Id')
+
+	if login.current_user.userId == boardInfo['adminId']:
+		return render_template('groupSettings.html', perm='Admin', boardId=boardId,
+								boardInfo=boardInfo,
+								mods =databaseFunctions.getAllBoardMods(boardId),
+								users=databaseFunctions.getAllBoardUsers(boardId),
+								errors=errors)
+
+	elif login.current_user.userId in boardInfo['modsList']:
+		modPerms = databaseFunctions.getModsPermissions(boardId, login.current_user.userId)
+		return render_template('groupSettings.html', perm='Mod', boardId=boardId, 
+								modPerms=modPerms,
+								boardInfo=boardInfo,
+								users=databaseFunctions.getAllBoardUsers(boardId),
+								errors=errors)
+	else:
+		return redirect('/?error=Error: mods and admins ONLY')
+
+@app.route('/<boardId>/removeMod/<modId>')
+@login.login_required
+def removeModPage(boardId, modId,errors=[]):
+	databaseFunctions.removeModFromBoard(boardId, modId)
+	return redirect('/'+boardId+'/settings?success=Success: Mod Removed')
+
+@app.route('/<boardId>/kickUser/<userId>')
+@login.login_required
+def kickUserPage(boardId, userId,errors=[]):
+	databaseFunctions.removeUserFromBoard(boardId, userId)
+	return redirect('/'+boardId+'/settings?success=Success: User Kicked')
+
 
 #     #   #####   #######  ######  
 #     #  #     #  #        #     # 
@@ -387,25 +438,6 @@ def logoutPage(errors=[]):
 	login.logout_user()
 	return redirect('/?success=You are now logged out')
 
-#build the settings
-@app.route('/<boardId>/settings')
-@login.login_required
-def settingsPage(boardId,errors=[]):
-	#make sure the user is the admin, render them the settings page
-	boardInfo = databaseFunctions.getBoardInfo(boardId)
-	if boardInfo == None:
-		return redirect('/?error=Error: Invalid board Id')
-
-	if login.current_user.userId == boardInfo['adminId']:
-		return render_template('groupSettings.html', isAdmin=True, boardId=boardId,
-								boardName=boardInfo['name'],
-								mods =databaseFunctions.getAllBoardMods(boardId),
-								users=databaseFunctions.getAllBoardUsers(boardId))
-
-	elif login.current_user.userId in boardInfo['mods']:
-		return render_template('groupSettings.html', isAdmin=False, boardId=boardId)
-	else:
-		return redirect('/?error=Error: mods and admins ONLY')
 
 @app.route('/changeUsername')
 @login.login_required
@@ -488,6 +520,12 @@ def changePasswordSubmitPage():
 def deleteAccountPage():
 	databaseFunctions.removeUser(login.current_user.userId)
 	login.logout_user()
+	return redirect('/')
+
+@app.route('/<boardId>/leaveGroup')
+@login.login_required
+def leaveGroupPage(boardId):
+	databaseFunctions.removeUserFromBoard(boardId, login.current_user.get_id())
 	return redirect('/')
 
 

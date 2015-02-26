@@ -56,6 +56,10 @@
 .postHeaderUsername:hover{
   color: #337ab7;
 }
+.postHeaderUsernameGrey{
+  color: #666;
+  
+}
 .post{
   max-width: 600px;
   display: inline-block;

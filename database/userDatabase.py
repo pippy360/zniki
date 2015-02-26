@@ -78,7 +78,8 @@ def addModBoard(userId, boardId):
 
 def removeModBoard(userId, boardId):
   key = _activeKey(userId)
-  pass
+  activeRedisDB.lrem(key+mod_boards_list_key, 0, boardId)
+
 #-private
 def getPrivateBoards(userId):
   key = _activeKey(userId)
@@ -90,7 +91,7 @@ def addPrivateBoard(userId, boardId):
 
 def removePrivateBoard(userId, boardId):
   key = _activeKey(userId)
-  pass
+  activeRedisDB.lrem(key+private_boards_list_key, 0, boardId)  
 
 
 #formats a key
