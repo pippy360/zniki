@@ -8,7 +8,7 @@
     <link href="/static/threadStyle.css" rel="stylesheet">
     <style type="text/css">
 .content{
-  width: 570px;
+  width: 700px;
   margin:auto;
 }
 .tab-pane{
@@ -25,8 +25,9 @@
 }
 .textInput{
   margin-right: 10px;
-  width: 450px;
-  display: inline-block;
+  width: 84%;
+  display: block;
+  float: left;
 }
 .settingsSubmitButton{
   width: 100px;
@@ -38,12 +39,12 @@
 .bigListLabel{
   border-bottom: 1px solid #ddd;
   font-size: 18px;
-  width: 600px;
+  width: 760px;
   margin: auto;
 }
 .pageTitle{
   position: relative;
-  width: 600px;
+  width: 780px;
   margin: auto;
 }
 .publicPrivateToggle{
@@ -56,6 +57,14 @@
   width:  14px;
   height: 14px;
   cursor: pointer;
+}
+.applyChangesButton{
+  border: 0px;
+  background-color: inherit;
+  color: #337ab7;
+}
+.applyChangesButton:hover{
+  text-decoration: underline;
 }
     </style>
 {% endblock %}
@@ -116,36 +125,39 @@
       <tbody>
         {% for mod in mods %}
         <tr>
-          <th scope="row">{{loop.index}}</th>
-          <td>{{mod.userInfo['username']}}</td>
-          {% if mod.addUsers == 'True' %}
-            <td class="checkboxStyleTd">
-              <input class="checkboxStyle" type="checkbox" name="vehicle" value="Car" checked>
-            </td>
-          {% else %}
-            <td class="checkboxStyleTd">
-              <input class="checkboxStyle" type="checkbox" name="vehicle" value="Car">
-            </td>
-          {% endif %}
-          {% if mod.kickUsers == 'True' %}
-            <td class="checkboxStyleTd">
-              <input class="checkboxStyle" type="checkbox" name="vehicle" value="Car" checked>
-            </td>
-          {% else %}
-            <td class="checkboxStyleTd">
-              <input class="checkboxStyle" type="checkbox" name="vehicle" value="Car">
-            </td>
-          {% endif %}
-          {% if mod.removePosts == 'True' %}
-            <td class="checkboxStyleTd">
-              <input class="checkboxStyle" type="checkbox" name="vehicle" value="Car" checked>
-            </td>
-          {% else %}
-            <td class="checkboxStyleTd">
-              <input class="checkboxStyle" type="checkbox" name="vehicle" value="Car">
-            </td>
-          {% endif %}
-          <td><a href="/{{boardId}}/removeMod/{{mod.userInfo['userId']}}">Remove Mod</a></td>
+          <form action="/{{boardId}}/changeModPerms/{{mod.userInfo['userId']}}" method="post">
+            <th scope="row">{{loop.index}}</th>
+            <td>{{mod.userInfo['username']}}</td>
+            {% if mod.addUsers == 'True' %}
+              <td class="checkboxStyleTd">
+                <input class="checkboxStyle" type="checkbox" name="addUsers" value="True" checked>
+              </td>
+            {% else %}
+              <td class="checkboxStyleTd">
+                <input class="checkboxStyle" type="checkbox" name="addUsers" value="True">
+              </td>
+            {% endif %}
+            {% if mod.kickUsers == 'True' %}
+              <td class="checkboxStyleTd">
+                <input class="checkboxStyle" type="checkbox" name="kickUsers" value="True" checked>
+              </td>
+            {% else %}
+              <td class="checkboxStyleTd">
+                <input class="checkboxStyle" type="checkbox" name="kickUsers" value="True">
+              </td>
+            {% endif %}
+            {% if mod.removePosts == 'True' %}
+              <td class="checkboxStyleTd">
+                <input class="checkboxStyle" type="checkbox" name="removePosts" value="True" checked>
+              </td>
+            {% else %}
+              <td class="checkboxStyleTd">
+                <input class="checkboxStyle" type="checkbox" name="removePosts" value="True">
+              </td>
+            {% endif %}
+            <td><input type="submit" class="applyChangesButton" value="Apply Changes"></td>
+            <td><a href="/{{boardId}}/removeMod/{{mod.userInfo['userId']}}">Remove Mod</a></td>
+          </form>
         </tr>
         {% endfor %}
       </tbody>

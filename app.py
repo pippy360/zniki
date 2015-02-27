@@ -252,6 +252,11 @@ def getThreadPreview(boardId, threadId):
 
 	return thread
 
+@app.route('/board/<boardId>/thread/<threadId>/removePost/<postId>')
+@login.login_required
+def removePostPage(boardId, threadId, postId):
+	databaseFunctions.removePost(boardId, threadId, postId)
+	return redirect('/board/'+boardId+'/thread/'+threadId)
 
 #not used, using javascript instead
 ##insert a <wbr></wbr> every n chars
@@ -293,6 +298,16 @@ def changeGroupPasswordSubmitPage(boardId):
 		return redirect('/'+boardId+'/settings')
 	else:
 		return redirect('/')
+
+@app.route('/<boardId>/changeModPerms/<modId>', methods=['post'])
+@login.login_required
+def changeModPermsPage(boardId, modId,errors=[]):
+	addUsers 	= request.form.get('addUsers', False)
+	kickUsers 	= request.form.get('kickUsers', False)
+	removePosts = request.form.get('removePosts', False)
+	databaseFunctions.setModPermissions(boardId, modId, addUsers, 
+										kickUsers, removePosts)
+	return redirect('/'+boardId+'/settings')
 
 @app.route('/<boardId>/togglePrivate')
 @login.login_required

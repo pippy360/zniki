@@ -27,3 +27,7 @@ def addPost(boardId, postId, message, attachedFileId=None, creatorIP=None, creat
 def getPost(boardId, postId):
 	key = keyFormat.format( boardId, postId )
 	return postRedisDB.hgetall( key )
+
+def removePost(boardId, postId):
+	key = keyFormat.format( boardId, postId )
+	postRedisDB.delete(key)

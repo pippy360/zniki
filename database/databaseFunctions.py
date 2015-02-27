@@ -161,6 +161,19 @@ def removeUserFromBoard(boardId, userId):
 	boardDatabase.removeBoardUser(boardId, userId)
 	userDatabase.removePrivateBoard(userId, boardId)
 
+def removeThread(boardId, threadId):
+	pass
+
+def removePost(boardId, threadId, postId):
+	postDatabase.removePost(boardId, postId)
+	threadDatabase.removePostIdFromPostList(boardId, threadId, postId)
+
+def setModPermissions(boardId, modId, addPeopleP=False,
+						kickUserP=False, deletePostP=False):
+	boardDatabase.setModPermissions(boardId, modId, addPeopleP, 
+						kickUserP, deletePostP)
+
+
 #     #   #####   #######  ######  
 #     #  #     #  #        #     # 
 #     #  #        #        #     # 

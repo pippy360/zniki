@@ -16,6 +16,10 @@ def addPostIdToPostList(boardId, threadId, postId):
 	key = _threadKey(boardId, threadId)
 	threadRedisDB.rpush( key+'_postList', postId )
 
+def removePostIdFromPostList(boardId, threadId, postId):
+	key = _threadKey(boardId, threadId)
+	threadRedisDB.lrem(key+'_postList', 0, postId)
+
 def incrementThreadPostCount(boardId, threadId):
 	key = _threadKey(boardId, threadId)
 	threadRedisDB.hincrby(key+'_info', 'post_count', 1)
