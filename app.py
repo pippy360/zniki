@@ -7,7 +7,7 @@ from flask.ext import login
 import loginLogic
 import utils
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '123456790'
+app.config['SECRET_KEY'] = '8pp3dStringb38rb'
 
 
 #postRedisDB = redis.StrictRedis( '127.0.0.1', 6379 )
@@ -30,9 +30,6 @@ app.config['SECRET_KEY'] = '123456790'
 #boardId = databaseFunctions.createBoard("School")
 #boardId = databaseFunctions.createBoard("Dogs and Cats")
 
-threadsPerPage = 5
-MAX_SUBJECT_LENGTH = 50
-MAX_COMMENT_LENGTH = 10000
 
 @app.route("/")
 @app.route("/home")
@@ -49,6 +46,8 @@ def showIndex():
 		boardList = databaseFunctions.getIndexPageInfoForUser(login.current_user.userId)
 	else:
 		boardList = databaseFunctions.getAllPublicBoardsPreview()
+
+	boardList = sorted(boardList, key=lambda board: board['name'])
 
 	if request.args.get('error') != None:
 		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
@@ -71,13 +70,14 @@ def showThread(threadId,boardId,errors=[]):
 
 @app.route("/board/<boardId>/thread/<threadId>/post", methods=['POST'])
 def post(boardId, threadId):
-	if request.form.get('postContent') or (len(request.files) > 0 and request.files.get('photo') != None 
+	comment = request.form.get('postContent')
+	if comment or (len(request.files) > 0 and request.files.get('photo') != None 
 			and request.files.get('photo').filename != ''):
 
-		if (request.form.get('postContent') != None 
-			and len(request.form.get('postContent')) > MAX_COMMENT_LENGTH):
+		status = utils.isValidComment(comment)
+		if not status['isValid']:
 			return redirect('/boardId/'+boardId+'/thread/'+threadId+
-				'?error=Error: Comment exceeded max length ('+str(MAX_COMMENT_LENGTH)+' characters).')
+				'?error=Error: '+status['reason'])
 
 		if login.current_user.is_authenticated():
 			creatorId = login.current_user.userId;
@@ -85,17 +85,17 @@ def post(boardId, threadId):
 			creatorId = None
 
 		if (len(request.files) > 0 and request.files.get('photo') != None 
-			and request.files.get('photo').filename != ''):
+				and request.files.get('photo').filename != ''):
 			status = filesAPI.handleUploadFormSubmit(request.files)
 			if not status['isValid']:
 				return redirect('/thread/'+threadId+'?error='+status['reason'])
 
 			fileId = databaseFunctions.addFileToDatabase(status['fileInfo'], "192.0.0.1")
 			databaseFunctions.createPost(boardId, threadId, 
-										request.form.get('postContent'), fileId, creatorId=creatorId)
+										comment, fileId, creatorId=creatorId)
 		else:
 			databaseFunctions.createPost(boardId, threadId, 
-										request.form.get('postContent'), creatorId=creatorId)
+										comment, creatorId=creatorId)
 
 		return redirect('/board/'+boardId+'/thread/'+threadId)
 	else:
@@ -104,19 +104,20 @@ def post(boardId, threadId):
 @app.route('/<boardId>/threadSubmit', methods=['POST'])
 def threadSubmitPage(boardId):
 	threadId = ''
-	if (request.form.get('subject') != None and request.form.get('comment') != None 
-		and request.files.get('photo') != None):
-		if (request.files.get('photo') == None or request.files.get('photo').filename == ''):
+	subject = request.form.get('subject')
+	comment = request.form.get('comment')
+	if subject != None and comment != None and request.files.get('photo') != None:
+		
+		if request.files.get('photo').filename == '':
 			return redirect('/?error=Error: No file uploaded.')
 
-		if (request.form.get('subject') != None 
-			and len(request.form.get('subject')) > MAX_SUBJECT_LENGTH):
-			return redirect('/?error=Error: Subject exceeded max length ('+str(MAX_SUBJECT_LENGTH)+' characters).')
+		status = utils.isValidSubject(subject)
+		if not status['isValid']:
+			return redirect('/?error=Error: '+status['reason'])
 
-		if (request.form.get('comment') != None 
-			and len(request.form.get('comment')) > MAX_COMMENT_LENGTH):
-			return redirect('/?error=Error: Comment exceeded max length ('+str(MAX_COMMENT_LENGTH)+' characters).')
-
+		status = utils.isValidComment(comment)
+		if not status['isValid']:
+			return redirect('/?error=Error: '+status['reason'])
 
 		status = filesAPI.handleUploadFormSubmit(request.files)
 		if not status['isValid']:
@@ -128,21 +129,24 @@ def threadSubmitPage(boardId):
 			creatorId = None
 
 		fileId = databaseFunctions.addFileToDatabase(status['fileInfo'], "192.0.0.1")
-		threadId = databaseFunctions.createThread(boardId, request.form['subject'], 
-												request.form['comment'], fileId, creatorId=creatorId)
+		threadId = databaseFunctions.createThread(boardId, subject, 
+												comment, fileId, creatorId=creatorId)
 		return redirect('/')
 	else:
 		return redirect('/')#pass it here and pass on an error message
 
 @app.route('/createNewGroup')
+@login.login_required
 def createNewGroupPage():
 	return render_template('createNewGroup.html')
 
 @app.route('/createNewGroupSubmit', methods=['POST'])
+@login.login_required
 def createNewGroupSubmitPage():
 	groupName = request.form.get("input_groupName")
-	if groupName == None:
-		return redirect('/createNewGroup?error=Error: Invalid Group Name')
+	status = isValidGroupName
+	if not status['isValid']:
+		return redirect('/createNewGroup?error=Error: '+status['reason'])
 
 	isPrivate = request.form.get("privateGroup")
 	isPrivate = (isPrivate == 'True')
@@ -155,6 +159,11 @@ def createNewGroupSubmitPage():
 @login.login_required
 def addUsersSubmitPage(boardId):
 	newUser = request.form.get("input_newUser")
+	
+	if not (utils.isValidUsername(newUser)['isValid'] or utils.isValidEmail(newUser)['isValid']):
+		return redirect('/'+boardId+'/settings?error=Error: Invalid username or email address ')
+
+	newUser = newUser.lower()
 	newUserId = databaseFunctions.getUserIdFromIdString(newUser)
 	if newUserId == None:
 		return redirect('/'+boardId+'/settings?error=Error: The username "'+newUser+'" didn\'t match any users')
@@ -178,6 +187,11 @@ def addUsersSubmitPage(boardId):
 @app.route('/<boardId>/addModsSubmit', methods=['POST'])
 def addModsSubmitPage(boardId):
 	newMod = request.form.get("input_newMod")
+
+	if not (utils.isValidUsername(newMod)['isValid'] or utils.isValidEmail(newMod)['isValid']):
+		return redirect('/'+boardId+'/settings?error=Error: Invalid username or email address ')
+
+	newMod = newMod.lower()
 	newModId = databaseFunctions.getUserIdFromIdString(newMod)
 	if newModId == None:
 		return redirect('/'+boardId+'/settings?error=Error: The username "'+newMod+'" didn\'t match any users')
@@ -283,6 +297,11 @@ def removePostPage(boardId, threadId, postId):
 def changeGroupNameSubmitPage(boardId):
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
 	newName   = request.form.get('input_newName')
+
+	status = isValidGroupName(newName)
+	if not status['isValid']:
+		return redirect('/'+boardId+'/settings?error=Error: '+status['reason'])
+
 	if login.current_user.userId == boardInfo['adminId']:
 		databaseFunctions.changeBoardName(boardId, newName)
 		return redirect('/'+boardId+'/settings')
@@ -293,6 +312,11 @@ def changeGroupNameSubmitPage(boardId):
 def changeGroupPasswordSubmitPage(boardId):
 	boardInfo   = databaseFunctions.getBoardInfo(boardId)
 	newPassword = request.form.get('input_newPassword')
+	
+	status = isValidPassword(newPassword)
+	if not status['isValid']:
+		return redirect('/'+boardId+'/settings?error=Error: '+status['reason'])
+
 	if login.current_user.userId == boardInfo['adminId']:
 		databaseFunctions.changeBoardPassword(boardId, newPassword)
 		return redirect('/'+boardId+'/settings')
@@ -313,6 +337,11 @@ def changeModPermsPage(boardId, modId,errors=[]):
 @login.login_required
 def togglePrivatePage(boardId,errors=[]):
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	if boardInfo['isPrivate'] == 'True':
+		databaseFunctions.makeBoardP
+	else:
+		databaseFunctions.makeBoardPublic(boardId)
+	return redirect('/'+boardId+'/settings')
 
 @app.route('/<boardId>/settings')
 @login.login_required
@@ -380,8 +409,10 @@ def loginSubmitPage():
 	userStringId = request.form.get('input_usernameLogin')
 	password 	 = request.form.get('input_passwordLogin')
 
-	#make sure they're non empty
+	if userStringId == None or userStringId == '':
+		return redirect('/login?error=Error: Bad Username or Email Address')
 
+	userStringId = userStringId.lower()
 	status = loginLogic.loginUser(userStringId, password)
 	if not status['isValid']:
 		return redirect('/login?error='+status['reason'])
@@ -396,15 +427,23 @@ def signUpSubmitPage():
 	password2 	 = request.form.get('input_passwordSignup2')
 	email 	 	 = request.form.get('input_emailSignup')
 	
-	if username == None or username == '':
-		return redirect('/login?error=Error: Invalid username')
-	elif password1 == None or password1 == '':
-		return redirect('/login?error=Error: Invalid Password')
-	elif email == None or email == '':
-		return redirect('/login?error=Error: Invalid Email')
-	elif not password1 == password2:
+	status = utils.isValidUsername(username)
+	if not status['isValid']:
+		return redirect('/login?error=Error: '+status['reason'])
+	
+	status = utils.isValidPassword(password1)
+	if not status['isValid']:
+		return redirect('/login?error=Error: '+status['reason'])
+
+	status = utils.isValidEmail(email)
+	if not status['isValid']:
+		return redirect('/login?error=Error: '+status['reason'])
+	
+	if not password1 == password2:
 		return redirect('/login?error=Error: Passwords did not match')
 	else:
+		email 	 = email.lower()#Emails are always stored as lowercase
+		username = username.lower()#Usernames are always stored as lowercase
 		returnCode = databaseFunctions.addUser(email, username, password1, 0)
 		if returnCode == -1:
 			return redirect('/login?error=Error: Username Taken')
@@ -434,9 +473,10 @@ def dashboardPage(errors=[]):
 @login.login_required
 def addFriendPage():
 	friendStringId = request.form.get('friendStringId')
-	if friendStringId == None or friendStringId == '':
+	if not (isValidUsername(friendStringId)['isValid'] or isValidEmail(friendStringId)['isValid']):
 		return redirect('/dashboard?friends=1&error=Error: Invalid Friend Id')
 
+	friendStringId = friendStringId.lower()
 	returnCode = databaseFunctions.addFriend(login.current_user.userId, friendStringId)
 	if returnCode == 0:
 		return redirect('/dashboard?friends=1&success=Success: Friend Added')
@@ -468,13 +508,15 @@ def changeUsernamePage():
 @login.login_required
 def changeUsernameSubmitPage():
 	newUsername = request.form.get('input_newUsername')
-	if newUsername != None and newUsername != '' and utils.isValidUsername(newUsername):
+	status = utils.isValidUsername(newUsername)
+	if status['isValid']:
+		newUsername = newUsername.lower()
 		if databaseFunctions.changeUsername(login.current_user.userId, newUsername) == -1:
 			return redirect('/changeUsername?error=Error: Username Taken&settings=1')
 		else:
 			return redirect('/dashboard?success=Success: Username Changed&settings=1')
-	
-	return redirect('/changeUsername?error=Error: Invalid Username')
+	else:
+		return redirect('/changeUsername?error=Error: '+status['reason'])
 
 @app.route('/changeEmail')
 @login.login_required
@@ -490,13 +532,15 @@ def changeEmailPage():
 @login.login_required
 def changeEmailSubmitPage():
 	newEmail = request.form.get('input_newEmail')
-	if newEmail != None and newEmail != '' and utils.isValidEmail(newEmail):
+	status = utils.isValidEmail(newEmail)
+	if status['isValid']:
+		newEmail = newEmail.lower()
 		if databaseFunctions.changeEmail(login.current_user.userId, newEmail) == -1:
 			return redirect('/changeEmail?error=Error: Email Taken&settings=1')
 		else:
 			return redirect('/dashboard?success=Success: Email Changed&settings=1')
-	
-	return redirect('/changeEmail?error=Error: Invalid email address')
+	else:
+		return redirect('/changeEmail?error=Error: '+status['reason'])
 
 @app.route('/changePassword')
 @login.login_required
@@ -511,11 +555,11 @@ def changePasswordPage():
 @app.route('/changePasswordSubmit', methods=['POST'])
 @login.login_required
 def changePasswordSubmitPage():
-	if (request.form.get('input_oldPassword') != None and request.form.get('input_newPassword1') != None 
-			and request.form.get('input_newPassword2') != None):
-		oldPassword  = request.form.get('input_oldPassword')
-		newPassword1 = request.form.get('input_newPassword1')
-		newPassword2 = request.form.get('input_newPassword2')
+	oldPassword  = request.form.get('input_oldPassword')
+	newPassword1 = request.form.get('input_newPassword1')
+	newPassword2 = request.form.get('input_newPassword2')
+	status = utils.isValidPassword(newPassword1)
+	if status['isValid']:
 
 		oldPasswordHash = oldPassword;
 		if oldPasswordHash != login.current_user.passwordHash:#the old password
@@ -528,7 +572,7 @@ def changePasswordSubmitPage():
 		databaseFunctions.changePasswordHash(login.current_user.userId, newPasswordHash)
 		return redirect('/dashboard?success=Success: Password Changed')
 	else:
-		return redirect('/dashboard?error=Error: Password Change Failed, darn it :(')
+		return redirect('/dashboard?error=Error: '+status['reason'])
 
 @app.route('/deleteAccount')
 @login.login_required

@@ -35,6 +35,14 @@ def getBoardInfo(boardId):
 	key = _boardKey(boardId)
 	return boardRedisDB.hgetall(key+'_info')
 
+def makeBoardPublic(boardId):
+	key = _boardKey(boardId)
+	return boardRedisDB.hset(key+'_info','isPrivate','False')
+
+def makeBoardPrivate(boardId):
+	key = _boardKey(boardId)
+	return boardRedisDB.hset(key+'_info','isPrivate','True')
+
 #users - only used if private
 
 def getAllBoardUsers(boardId):

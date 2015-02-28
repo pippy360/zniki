@@ -173,6 +173,11 @@ def setModPermissions(boardId, modId, addPeopleP=False,
 	boardDatabase.setModPermissions(boardId, modId, addPeopleP, 
 						kickUserP, deletePostP)
 
+def makeBoardPublic(boardId):
+	boardDatabase.makeBoardPublic(boardId)
+
+def makeBoardPrivate(boardId):
+	boardDatabase.makeBoardPrivate(boardId)
 
 #     #   #####   #######  ######  
 #     #  #     #  #        #     # 
