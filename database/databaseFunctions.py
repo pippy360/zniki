@@ -118,10 +118,21 @@ def getPostsRange(boardId, threadId, start, end):
 	return result
 
 def addModToBoard(newModId, boardId):
+	boardInfo = getBoardInfo(boardId)
+	if newModId in boardInfo['modsList']:
+		return
+
+	if not newModId in boardInfo['usersList']:
+		addUserToBoard(newModId, boardId)
+
 	boardDatabase.addBoardMod(boardId, newModId)
 	userDatabase.addModBoard(newModId, boardId)
 
 def addUserToBoard(newUserId, boardId):
+	boardInfo = getBoardInfo(boardId)
+	if newUserId in boardInfo['usersList']:
+		return
+
 	boardDatabase.addBoardUser(boardId, newUserId)
 	userDatabase.addPrivateBoard(newUserId, boardId)
 
@@ -175,9 +186,32 @@ def setModPermissions(boardId, modId, addPeopleP=False,
 
 def makeBoardPublic(boardId):
 	boardDatabase.makeBoardPublic(boardId)
+	globalDatabase.addBoardIdToPublicBoardList(boardId)
 
 def makeBoardPrivate(boardId):
 	boardDatabase.makeBoardPrivate(boardId)
+	globalDatabase.removeBoardIdFromPublicBoardList(boardId)
+
+def removeBoard(boardId):
+	boardInfo = getBoardInfo(boardId)
+	for userId in boardInfo['usersList']:
+		removeUserFromBoard(boardId, userId)
+
+	boardDatabase.removeBoard(boardId)
+	globalDatabase.removeBoardIdFromBoardList(boardId)
+	if not boardInfo['isPrivate'] == 'False':
+		globalDatabase.removeBoardIdFromPublicBoardList(boardId)
+	#now remove from admin
+	userDatabase.removeAdminBoard(boardInfo['adminId'], boardId)
+	removeUserFromBoard(boardId, boardInfo['adminId'])
+
+	#now delete the board key !!
+	boardDatabase.removeBoard(boardId)
+
+def removeThread(boardId, threadId):
+	boardDatabase.removeThreadIdFromThreadList(boardId, threadId)
+	threadDatabase.removeThread(boardId, threadId)
+	#FIXME: make sure all posts are deleted
 
 #     #   #####   #######  ######  
 #     #  #     #  #        #     # 
@@ -345,6 +379,8 @@ def getBoardUserSettings(boardId, currentUserId=None):
 			result['role'] = 'User'
 	else:
 		result['role'] = 'Anon'
+
+	return result
 
 def getAllBoardsPreview(boardList, userId=None):
 	if boardList == None:

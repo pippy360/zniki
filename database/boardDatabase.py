@@ -43,6 +43,14 @@ def makeBoardPrivate(boardId):
 	key = _boardKey(boardId)
 	return boardRedisDB.hset(key+'_info','isPrivate','True')
 
+def removeBoard(boardId):
+	key = _boardKey(boardId)
+	boardRedisDB.delete(key+'_info')
+	boardRedisDB.delete(key+board_user_key)
+	boardRedisDB.delete(key+board_post_key)
+	boardRedisDB.delete(key+board_mod_key_list)
+	#also delete all the mods
+
 #users - only used if private
 
 def getAllBoardUsers(boardId):
@@ -98,7 +106,11 @@ def removeBoardMod(boardId, modId):
 #threads
 def addThreadIdToThreadList(boardId, threadId):
 	key = _boardKey(boardId)
-	boardRedisDB.lpush( key+'_threadList', threadId )
+	boardRedisDB.lpush(key+'_threadList', threadId)
+
+def removeThreadIdFromThreadList(boardId, threadId):
+	key = _boardKey(boardId)
+	boardRedisDB.lrem(key+'_threadList', 0, threadId)
 
 def moveThreadToFront(boardId, threadId):
 	key = _boardKey(boardId)

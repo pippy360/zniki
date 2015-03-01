@@ -62,10 +62,15 @@ def showThread(threadId,boardId,errors=[]):
 
 	thread = databaseFunctions.getThread(boardId, threadId)
 
+	if login.current_user.is_authenticated():
+		userSettings = databaseFunctions.getBoardUserSettings(boardId, login.current_user.get_id())
+	else: 
+		userSettings = databaseFunctions.getBoardUserSettings(boardId, None)
+
 	if thread == None:
 		return redirect('/?error=Error: Thread doesn\'t exist.')
 	boardName = databaseFunctions.getBoardName(boardId)
-	return render_template("thread.html", boardName=boardName, boardId=boardId, 
+	return render_template("thread.html", userSettings=userSettings, boardName=boardName, boardId=boardId, 
 							thread=thread, threadId=threadId,errors=errors)
 
 @app.route("/board/<boardId>/thread/<threadId>/post", methods=['POST'])
@@ -74,7 +79,7 @@ def post(boardId, threadId):
 	if comment or (len(request.files) > 0 and request.files.get('photo') != None 
 			and request.files.get('photo').filename != ''):
 
-		status = utils.isValidComment(comment)
+		status = utils.isValidThreadComment(comment)
 		if not status['isValid']:
 			return redirect('/boardId/'+boardId+'/thread/'+threadId+
 				'?error=Error: '+status['reason'])
@@ -109,19 +114,19 @@ def threadSubmitPage(boardId):
 	if subject != None and comment != None and request.files.get('photo') != None:
 		
 		if request.files.get('photo').filename == '':
-			return redirect('/?error=Error: No file uploaded.')
+			return redirect('/'+boardId+'/createNewConv?error=Error: No file uploaded.')
 
-		status = utils.isValidSubject(subject)
+		status = utils.isValidThreadSubject(subject)
 		if not status['isValid']:
-			return redirect('/?error=Error: '+status['reason'])
+			return redirect('/'+boardId+'/createNewConv?error=Error: '+status['reason'])
 
-		status = utils.isValidComment(comment)
+		status = utils.isValidThreadComment(comment)
 		if not status['isValid']:
-			return redirect('/?error=Error: '+status['reason'])
+			return redirect('/'+boardId+'/createNewConv?error=Error: '+status['reason'])
 
 		status = filesAPI.handleUploadFormSubmit(request.files)
 		if not status['isValid']:
-			return redirect('/?error='+status['reason'])
+			return redirect('/'+boardId+'/createNewConv?error='+status['reason'])
 
 		if login.current_user.is_authenticated():
 			creatorId = login.current_user.userId
@@ -144,7 +149,7 @@ def createNewGroupPage():
 @login.login_required
 def createNewGroupSubmitPage():
 	groupName = request.form.get("input_groupName")
-	status = isValidGroupName
+	status = utils.isValidGroupName(groupName)
 	if not status['isValid']:
 		return redirect('/createNewGroup?error=Error: '+status['reason'])
 
@@ -160,7 +165,7 @@ def createNewGroupSubmitPage():
 def addUsersSubmitPage(boardId):
 	newUser = request.form.get("input_newUser")
 	
-	if not (utils.isValidUsername(newUser)['isValid'] or utils.isValidEmail(newUser)['isValid']):
+	if newUser == None or newUser == '':
 		return redirect('/'+boardId+'/settings?error=Error: Invalid username or email address ')
 
 	newUser = newUser.lower()
@@ -188,7 +193,7 @@ def addUsersSubmitPage(boardId):
 def addModsSubmitPage(boardId):
 	newMod = request.form.get("input_newMod")
 
-	if not (utils.isValidUsername(newMod)['isValid'] or utils.isValidEmail(newMod)['isValid']):
+	if newMod == None or newMod == '':
 		return redirect('/'+boardId+'/settings?error=Error: Invalid username or email address ')
 
 	newMod = newMod.lower()
@@ -210,7 +215,13 @@ def addModsSubmitPage(boardId):
 
 @app.route('/<boardId>/createNewConv')
 def createNewConversationPage(boardId):
-	return render_template('createNewThread.html',boardId=boardId)
+	errors = []
+	if request.args.get('error') != None:
+		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
+	if request.args.get('success') != None:
+		errors = [{'message':request.args.get('success'),'class':'bg-success'}]
+
+	return render_template('createNewThread.html',boardId=boardId, errors=errors)
 
 #FIXME: thread submit is currently used instead of this
 #@app.route('/<boardId>/createNewConvSubmit')
@@ -271,6 +282,12 @@ def getThreadPreview(boardId, threadId):
 def removePostPage(boardId, threadId, postId):
 	databaseFunctions.removePost(boardId, threadId, postId)
 	return redirect('/board/'+boardId+'/thread/'+threadId)
+
+@app.route('/board/<boardId>/thread/<threadId>/deleteThread')
+@login.login_required
+def deleteThread(boardId, threadId):
+	databaseFunctions.removeThread(boardId, threadId)
+	return redirect('/')
 
 #not used, using javascript instead
 ##insert a <wbr></wbr> every n chars
@@ -338,9 +355,9 @@ def changeModPermsPage(boardId, modId,errors=[]):
 def togglePrivatePage(boardId,errors=[]):
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
 	if boardInfo['isPrivate'] == 'True':
-		databaseFunctions.makeBoardP
-	else:
 		databaseFunctions.makeBoardPublic(boardId)
+	else:
+		databaseFunctions.makeBoardPrivate(boardId)
 	return redirect('/'+boardId+'/settings')
 
 @app.route('/<boardId>/settings')
@@ -385,6 +402,14 @@ def kickUserPage(boardId, userId,errors=[]):
 	databaseFunctions.removeUserFromBoard(boardId, userId)
 	return redirect('/'+boardId+'/settings?success=Success: User Kicked')
 
+@app.route('/<boardId>/deleteBoard')
+@login.login_required
+def deleteBoardPage(boardId):
+	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	if login.current_user.userId == boardInfo['adminId']:
+		databaseFunctions.removeBoard(boardId)
+	
+	return redirect('/')
 
 #     #   #####   #######  ######  
 #     #  #     #  #        #     # 

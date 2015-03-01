@@ -66,7 +66,8 @@ def addAdminBoard(userId, boardId):
   
 def removeAdminBoard(userId, boardId):
   key = _activeKey(userId)
-  pass
+  activeRedisDB.lrem(key+admin_boards_list_key, 0, boardId)
+
 #-mods
 def getModBoards(userId):
   key = _activeKey(userId)

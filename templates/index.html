@@ -136,6 +136,14 @@
 	top: 30px;
 	left: 50px;
 }
+.nothingHereMessage{
+	text-align: center;
+	font-size: 20px;
+	margin-top: 10px;
+}
+.createNewThreadWrapper{
+	height: 80px;
+}
     </style>
 {% endblock %}
 
@@ -148,7 +156,7 @@
 					<span class="createNewGroup"><a href="/createNewGroup" >Create New Group</a></span>
 				{% endif %}
 			</div>
-			<ul>
+			<ul id="ul_groupMenu">
 				{% for board in boardList %}
 					{% if loop.index == 1 %}
 						<li class="menuItem active">
@@ -165,7 +173,7 @@
 										<span class="publicPrivateSubhead">Public</span>
 									{% endif %}
 									{% if current_user.userId == board['adminId'] %}
-										<span class="adminFlair">admin</span>
+										<span class="adminFlair">Admin</span>
 									{% elif current_user.userId in board['modsList'] %}
 										<span class="modFlair">Mod</span>
 									{% endif %}
@@ -217,31 +225,42 @@
 								{% endif %}
 							</div>
 						</div>
-				    {% for thread in board['threads'] %}
-					      <div class="thread clearfix">
-					        <div class="threadFirstPost">
-					          <div class="threadFirstPostImageWrapper">
-					              <img src="/thumb?height=125&width=125&fileId={{ thread['posts'][0].fileinfo['databaseId'] }}">
-					          </div>
-					          <div class="threadFirstPostRight">
-					            <div class="threadFirstPostTitle">
-			            		<a href="/board/{{board['boardId']}}/thread/{{thread['threadId']}}">
-					              <span class="threadTitle">{{ thread['subject'] }}</span></a><span class="threadCreatorName"> - by <span class="hoverBlue">{{thread['posts'][0].creatorName}}<span></span>
-			           			
-					            </div>
-					            <div class="threadFirstPostMessage">
-					              {{ thread['posts'][0].message }}
-					            </div>
-					          </div>
-					        </div>
-					      </div><!--/thread-->
-				    {% endfor %}
+					{% if board['threads']|length == 0 %}
+						<div class="nothingHereMessage">
+							This Group is Empty
+						</div>
+					{% else %}
+					    {% for thread in board['threads'] %}
+						  <div class="thread clearfix">
+						    <div class="threadFirstPost">
+						      <div class="threadFirstPostImageWrapper">
+						          <img src="/thumb?height=125&width=125&fileId={{ thread['posts'][0].fileinfo['databaseId'] }}">
+						      </div>
+						      <div class="threadFirstPostRight">
+						        <div class="threadFirstPostTitle">
+								<a href="/board/{{board['boardId']}}/thread/{{thread['threadId']}}">
+						          <span class="threadTitle">{{ thread['subject'] }}</span></a><span class="threadCreatorName"> - by <span class="hoverBlue">{{thread['posts'][0].creatorName}}<span></span>
+						        </div>
+						        <div class="threadFirstPostMessage">
+						          {{ thread['posts'][0].message }}
+						        </div>
+						      </div>
+						    </div>
+						  </div><!--/thread-->
+					    {% endfor %}
+					{% endif %}
 				</div><!--/threadsWrapper--> 
 			</div>
 		    {% endfor %}	
 		</div>
 	</div>
 </div>
+<script>
+    $('#ul_groupMenu a').click(function (e) {
+        e.preventDefault();
+        $(this).tab('show');
+    });
+</script>
 {% endblock %}
 
 
