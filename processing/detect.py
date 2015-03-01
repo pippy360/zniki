@@ -28,8 +28,6 @@ import re
 # ImageMagick can handle it.
 
 def detect(path):
-    return None #TODO: get stuff below to work
-
     result = detect_ffprobe(path)
     if result != None:
         return result

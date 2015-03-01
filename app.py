@@ -402,8 +402,8 @@ def chatBegin():
 	if chatId != None:
 		print 'warning: trying to initiate existing chat from user %s about board %s and post %s (to user %s)' % \
 			(initiatorId, boardId, postId, receiverId)
-		ch = chat.getChatInfo(chatId)
-		return jsonify(chatId = ch.id, state = ch.state)
+		chatInfo = chat.getChatInfo(chatId)
+		return jsonify(chatId = chatInfo.id, state = chatInfo.state)
 
 	else:
 		print 'initiating chat from user %s about board %s and post %s (to user %s)' % \
@@ -424,7 +424,7 @@ def chatEnd():
 	if 'reason' in json:
 		reason = json['reason']
 
-	print 'user %s requested we end chat %s, because: %s', userId, chatId, reason
+	print 'user %s requested we end chat %s, because: %s' % (userId, chatId, reason)
 
 	if not chat.isUserInChat(userId, chatId):
 		print 'but either the chat does not exist or the user is not part of the chat'

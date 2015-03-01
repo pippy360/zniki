@@ -286,20 +286,21 @@ function handleChatUpdates(data) {
 			for (var updateState in updates) {
 				var dir = updates[updateState][0];
 				var msg = updates[updateState][1];
+				msg = updateState + '|' + msg; //DEBUG, for now
 
 				var existing = chatElem.find('#' + chatId + '-' + updateState);
 				if (existing.length == 1) {
 					var existingText = existing.find('.chat-log-text').text();
+					existing.find(".fa-refresh").remove(); //the pending indicator
+
 					if (existingText != msg) {
 						logic.logMessage('update #' + updateState + ' has a different content than our local one');
-						existingText.val(msg);
-						existing.find(".fa-refresh").remove();
+						existingText.text(msg);
 					}
 				}
 				else if (existing.length == 0) {
 					//reply does not exist locally, so add it
-					var debugMsg = updateState + '|' + msg
-					var replyHTML = generateReplyHTML(chatId + '-' + updateState, handles[dir], debugMsg, false);
+					var replyHTML = generateReplyHTML(chatId + '-' + updateState, handles[dir], msg, false);
 					logic.logElem.append(replyHTML);
 					logic.scrollToBottom();
 				}
@@ -366,6 +367,22 @@ function chatPoll(timeout, again) {
 function beginChat(boardId, postId, partnerName) {
 	var chatList = $("#chat-list");
 	chatList.show();
+
+	//first make sure the chat about this board/post doesn't already exist
+	var existingLogic = null;
+	chatList.each(function() {
+		var logic = $(this).data("logic");
+		if (logic.boardId == boardId && logic.postId == postId) {
+			existingLogic = logic;
+			return false; //stop looping
+		}
+	});
+
+	if (existingLogic) {
+		existingLogic.flashGreen();
+		existingLogic.entryElem.focus();
+		return;
+	}
 
 	//initialize html
 	var elemId = 'chat-new-' + chatList.children().length;
