@@ -242,9 +242,11 @@ def changeEmail(userId, newEmail):
 	userDatabase.changeEmail(userId, newEmail)
 	emailDatabase.addEmail(newEmail, userId)
 
+#todo: return a dict here instead !!
 #returns 0 on success, 
 #returns -1 if the username/email doens't exist
 #returns -2 if you guys are already friends
+#returns -3 if you're trying to add yourself
 def addFriend(userId, friendStringId):
 	#make sure the username/email exists
 	friendId = usernameDatabase.getUsernameUserId(friendStringId)
@@ -254,6 +256,8 @@ def addFriend(userId, friendStringId):
 			return -1
 	elif friendId in userDatabase.getFriends(userId):
 		return -2
+	elif friendId == userId:
+		return -3
 
 	userDatabase.addFriend(userId, friendId)
 	return 0

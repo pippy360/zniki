@@ -509,6 +509,8 @@ def addFriendPage():
 		return redirect('/dashboard?friends=1&error=Error: User Doesn\' exist')
 	elif returnCode == -2:
 		return redirect('/dashboard?friends=1&error=Error: That user is already your friend')
+	elif returnCode == -3:
+		return redirect('/dashboard?friends=1&error=Error: You can\'t add yourself silly!')
 	else:
 		return redirect('/dashboard?friends=1&error=Error: Something weird happened O_o')
 
