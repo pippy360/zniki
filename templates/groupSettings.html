@@ -1,0 +1,204 @@
+{% extends "baseLayout.html" %}
+
+{% block topLink %}
+<a href='/' class="topbarLink"> {{boardName}}</a>  > <a href='/thread/{{ thread['threadId'] }}' class="topbarLink"> Thread {{ thread['threadId'] }} </a>
+{% endblock %}
+
+{% block head %}
+    <link href="/static/threadStyle.css" rel="stylesheet">
+    <style type="text/css">
+.content{
+  width: 700px;
+  margin:auto;
+}
+.tab-pane{
+  padding: 40px;
+}
+.addFriendInput{
+  width: 400px;
+  float: left;
+}
+.addFriendSubmit{
+  margin-left: 10px;
+  width: 100px;
+  float: left;
+}
+.textInput{
+  margin-right: 10px;
+  width: 84%;
+  display: block;
+  float: left;
+}
+.settingsSubmitButton{
+  width: 100px;
+  display: inline-block;
+}
+.settingsLabel{
+  display: block;
+}
+.bigListLabel{
+  border-bottom: 1px solid #ddd;
+  font-size: 18px;
+  width: 760px;
+  margin: auto;
+}
+.pageTitle{
+  position: relative;
+  width: 780px;
+  margin: auto;
+}
+.publicPrivateToggle{
+  font-size: 18px;
+}
+.checkboxStyleTd{
+  text-align: center;
+}
+.checkboxStyle{
+  width:  14px;
+  height: 14px;
+  cursor: pointer;
+}
+.applyChangesButton{
+  border: 0px;
+  background-color: inherit;
+  color: #337ab7;
+}
+.applyChangesButton:hover{
+  text-decoration: underline;
+}
+    </style>
+{% endblock %}
+
+{% block content %}
+{% if perm=='Admin' %}
+  <h2 class="pageTitle">"{{boardInfo['name']}}" settings</h2>
+{% else %}
+  <h2 class="pageTitle">"{{boardInfo['name']}}" user settings</h2>
+{% endif %}
+<div class="content">
+  <br>
+{% if perm=='Admin' %}
+  <br>
+  <div>
+      <a class="publicPrivateToggle" href="/{{boardId}}/deleteBoard">Delete Group</a>
+      <br>
+      <br>
+    {% if boardInfo['isPrivate'] == 'True' %}
+      <a class="publicPrivateToggle" href="/{{boardId}}/togglePrivate">Make Group Public</a>
+    {% else %}
+      <a class="publicPrivateToggle" href="/{{boardId}}/togglePrivate">Make Group Private</a>
+    {% endif %}
+  </div>
+  <br>
+  <form action="/{{boardId}}/changeGroupNameSubmit" method="post">
+    <label class="settingsLabel">Change Name</label>
+    <input type="text" name="input_newName" class="form-control textInput" placeholder="New Name">
+    <input class="settingsSubmitButton form-control" type="submit">
+  </form>
+  <br>
+  <form action="/{{boardId}}/changeGroupPasswordSubmit" method="post">
+    <label class="settingsLabel">Change Password</label>
+    <input type="text" name="input_newPassword" class="form-control textInput" placeholder="New Password">
+    <input class="settingsSubmitButton form-control" type="submit">
+  </form>
+  <br>
+  <br>
+</div>
+<label class="settingsLabel bigListLabel">Moderators</label>
+<div class="content">
+  <form action="/{{boardId}}/addModsSubmit" method="post">
+  <br>
+    <input type="text" class="form-control textInput" name="input_newMod" placeholder="Add Moderator">
+    <input class="settingsSubmitButton form-control" type="submit">
+  </form>
+  <br>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Username</th>
+          <th>Add Users</th>
+          <th>Kick Users</th>
+          <th>Remove Posts</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for mod in mods %}
+        <tr>
+          <form action="/{{boardId}}/changeModPerms/{{mod.userInfo['userId']}}" method="post">
+            <th scope="row">{{loop.index}}</th>
+            <td>{{mod.userInfo['username']}}</td>
+            {% if mod.addUsers == 'True' %}
+              <td class="checkboxStyleTd">
+                <input class="checkboxStyle" type="checkbox" name="addUsers" value="True" checked>
+              </td>
+            {% else %}
+              <td class="checkboxStyleTd">
+                <input class="checkboxStyle" type="checkbox" name="addUsers" value="True">
+              </td>
+            {% endif %}
+            {% if mod.kickUsers == 'True' %}
+              <td class="checkboxStyleTd">
+                <input class="checkboxStyle" type="checkbox" name="kickUsers" value="True" checked>
+              </td>
+            {% else %}
+              <td class="checkboxStyleTd">
+                <input class="checkboxStyle" type="checkbox" name="kickUsers" value="True">
+              </td>
+            {% endif %}
+            {% if mod.removePosts == 'True' %}
+              <td class="checkboxStyleTd">
+                <input class="checkboxStyle" type="checkbox" name="removePosts" value="True" checked>
+              </td>
+            {% else %}
+              <td class="checkboxStyleTd">
+                <input class="checkboxStyle" type="checkbox" name="removePosts" value="True">
+              </td>
+            {% endif %}
+            <td><input type="submit" class="applyChangesButton" value="Apply Changes"></td>
+            <td><a href="/{{boardId}}/removeMod/{{mod.userInfo['userId']}}">Remove Mod</a></td>
+          </form>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+{% endif %}
+  <br>
+</div>
+
+{% if boardInfo['isPrivate'] == 'True' %}
+    <label class="settingsLabel bigListLabel">Users</label>
+<div class="content">
+  <form action="/{{boardId}}/addUsersSubmit" method="post">
+  <br>
+  {% if perm=='Admin' or (perm=='Mod' and modPerms['addUsers'] == 'True') %}
+    <input type="text" class="form-control textInput" name="input_newUser" placeholder="Add User">
+    <input class="settingsSubmitButton form-control" type="submit">
+  {% endif %}
+  </form>
+  <br>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Username</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <th scope="row">{{loop.index}}</th>
+          <td>{{user['username']}}</td>
+        {% if perm=='Admin' or (perm=='Mod' and modPerms['kickUsers'] == 'True') %}
+          <td><a href="/{{boardId}}/kickUser/{{user['userId']}}">Kick User</a></td>
+        {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+</div>
+{% endif %}
+</div>
+{% endblock %}
+
+

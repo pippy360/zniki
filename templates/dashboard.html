@@ -14,6 +14,15 @@
 .tab-pane{
   padding: 40px;
 }
+.addFriendInput{
+  width: 400px;
+  float: left;
+}
+.addFriendSubmit{
+  margin-left: 10px;
+  width: 100px;
+  float: left;
+}
     </style>
 {% endblock %}
 
@@ -51,7 +60,31 @@
             <br>
           </div>
           <div>
+            <div>
+              <form action="/addFriend" method="post">
+                <div>Add New Friend: </div><input class="addFriendInput form-control" name="friendStringId" list="datalist_newFriendIds">
+                <input type="submit" class="addFriendSubmit form-control">
+                <datalist id="datalist_newFriendIds">
+                  {% for username in usernames %}
+                    <option value="{{username}}">
+                  {% endfor %}
+                  {% for email in emails %}
+                    <option value="{{email}}">
+                  {% endfor %}
+                </datalist>
+              </form>
+            </div>
+            <br>
+            <br>
+            <br>
+            <div>
             Friends:
+            <ul>  
+              {% for friend in friends %}
+                <li>{{friend.username}}</li>
+              {% endfor %}
+            </ul> 
+            </div>
             <br>
             <br>
           </div>
@@ -70,6 +103,11 @@
           </div>
           <div>
             <a href="/changeEmail">Change Email</a>
+            <br>
+            <br>
+          </div>
+          <div>
+            <a href="/deleteAccount">Delete Account</a>
             <br>
             <br>
           </div>

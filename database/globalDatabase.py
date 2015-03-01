@@ -16,13 +16,16 @@ def addBoardIdToBoardList(boardId):
 	globalRedisDB.lpush(board_list_key, boardId)
 
 def removeBoardIdFromBoardList(boardId):
-	pass
+	globalRedisDB.lrem(board_list_key, 0, boardId)
 
 def getPublicBoardList():
 	return globalRedisDB.lrange(public_board_list_key, 0, -1)
 
 def addBoardIdToPublicBoardList(boardId):
 	globalRedisDB.lpush(public_board_list_key, boardId)
+
+def removeBoardIdFromPublicBoardList(boardId):
+	globalRedisDB.lrem(public_board_list_key, 0, boardId)
 
 def getGlobalCount():
 	if globalRedisDB.get(global_count_key) == None:

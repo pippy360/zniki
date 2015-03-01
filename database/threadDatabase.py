@@ -12,9 +12,17 @@ def addNewThread(boardId, threadId, subject):
 	key = _threadKey(boardId, threadId)
 	threadRedisDB.hmset(key+'_info', threadInfo)
 
+def removeThread(boardId, threadId):
+	key = _threadKey(boardId, threadId)
+	threadRedisDB.delete(key+'_info')
+
 def addPostIdToPostList(boardId, threadId, postId):
 	key = _threadKey(boardId, threadId)
 	threadRedisDB.rpush( key+'_postList', postId )
+
+def removePostIdFromPostList(boardId, threadId, postId):
+	key = _threadKey(boardId, threadId)
+	threadRedisDB.lrem(key+'_postList', 0, postId)
 
 def incrementThreadPostCount(boardId, threadId):
 	key = _threadKey(boardId, threadId)
@@ -34,6 +42,7 @@ def getThreadPostListAll(boardId, threadId):
 def getThreadPostListRange(boardId, threadId, start, end):
 	key = _threadKey(boardId, threadId)
 	return threadRedisDB.lrange(key+'_postList', start, end)
+
 
 def _threadKey(boardId, threadId):
 	return keyFormat.format( boardId, threadId )

@@ -55,6 +55,8 @@ def getBoardThreadCount(boardId):
 def getBoardInfo(boardId):
 	board = boardDatabase.getBoardInfo(boardId)
 	board['boardId'] = boardId
+	board['modsList'] = boardDatabase.getModsIdsList(boardId)
+	board['usersList'] = boardDatabase.getAllBoardUsers(boardId)
 	return board
 
 def addFileToDatabase(fileInfo, creatorIP):
@@ -87,7 +89,10 @@ def getPost(boardId, postId):
 		postInfo['creatorName'] = 'Anonymouse'
 	else:
 		userData = userDatabase.getUserInfo(userId)
-		postInfo['creatorName'] = userData['username']
+		if userData == {}:
+			postInfo['creatorName'] = 'Deleted'
+		else:
+			postInfo['creatorName'] = userData['username']
 
 	if fileId != "" and fileId != None and fileId != 'NULL':
 		fileInfo = fileDatabase.getFileInfo(fileId)
@@ -112,6 +117,101 @@ def getPostsRange(boardId, threadId, start, end):
 
 	return result
 
+def addModToBoard(newModId, boardId):
+	boardInfo = getBoardInfo(boardId)
+	if newModId in boardInfo['modsList']:
+		return
+
+	if not newModId in boardInfo['usersList']:
+		addUserToBoard(newModId, boardId)
+
+	boardDatabase.addBoardMod(boardId, newModId)
+	userDatabase.addModBoard(newModId, boardId)
+
+def addUserToBoard(newUserId, boardId):
+	boardInfo = getBoardInfo(boardId)
+	if newUserId in boardInfo['usersList']:
+		return
+
+	boardDatabase.addBoardUser(boardId, newUserId)
+	userDatabase.addPrivateBoard(newUserId, boardId)
+
+def getAllBoardMods(boardId):
+	result = []
+	modIdsList = boardDatabase.getModsIdsList(boardId)
+	for modId in modIdsList:
+		mod = boardDatabase.getModsPermissions(boardId, modId)
+		mod['userInfo'] = getUserInfo(modId)
+		result.append(mod)
+
+	return result
+
+def getAllBoardUsers(boardId):
+	result = []
+	userIdsList = boardDatabase.getAllBoardUsers(boardId)
+	for userId in userIdsList:
+		result.append(getUserInfo(userId))
+
+	return result
+
+def changeBoardName(boardId, newName):
+	boardDatabase.changeBoardName(boardId, newName)
+
+def changeBoardPassword(boardId, newName):
+	boardDatabase.changeBoardPassword(boardId, newName)
+
+def getModsPermissions(boardId, modId):
+	return boardDatabase.getModsPermissions(boardId, modId)
+
+def removeModFromBoard(boardId, modId):
+	boardDatabase.removeBoardMod(boardId, modId)
+	userDatabase.removeModBoard(modId, boardId)
+
+def removeUserFromBoard(boardId, userId):
+	removeModFromBoard(boardId, userId)
+	boardDatabase.removeBoardUser(boardId, userId)
+	userDatabase.removePrivateBoard(userId, boardId)
+
+def removeThread(boardId, threadId):
+	pass
+
+def removePost(boardId, threadId, postId):
+	postDatabase.removePost(boardId, postId)
+	threadDatabase.removePostIdFromPostList(boardId, threadId, postId)
+
+def setModPermissions(boardId, modId, addPeopleP=False,
+						kickUserP=False, deletePostP=False):
+	boardDatabase.setModPermissions(boardId, modId, addPeopleP, 
+						kickUserP, deletePostP)
+
+def makeBoardPublic(boardId):
+	boardDatabase.makeBoardPublic(boardId)
+	globalDatabase.addBoardIdToPublicBoardList(boardId)
+
+def makeBoardPrivate(boardId):
+	boardDatabase.makeBoardPrivate(boardId)
+	globalDatabase.removeBoardIdFromPublicBoardList(boardId)
+
+def removeBoard(boardId):
+	boardInfo = getBoardInfo(boardId)
+	for userId in boardInfo['usersList']:
+		removeUserFromBoard(boardId, userId)
+
+	boardDatabase.removeBoard(boardId)
+	globalDatabase.removeBoardIdFromBoardList(boardId)
+	if not boardInfo['isPrivate'] == 'False':
+		globalDatabase.removeBoardIdFromPublicBoardList(boardId)
+	#now remove from admin
+	userDatabase.removeAdminBoard(boardInfo['adminId'], boardId)
+	removeUserFromBoard(boardId, boardInfo['adminId'])
+
+	#now delete the board key !!
+	boardDatabase.removeBoard(boardId)
+
+def removeThread(boardId, threadId):
+	boardDatabase.removeThreadIdFromThreadList(boardId, threadId)
+	threadDatabase.removeThread(boardId, threadId)
+	#FIXME: make sure all posts are deleted
 
 #     #   #####   #######  ######  
 #     #  #     #  #        #     # 
@@ -142,6 +242,29 @@ def changeEmail(userId, newEmail):
 	userDatabase.changeEmail(userId, newEmail)
 	emailDatabase.addEmail(newEmail, userId)
 
+#returns 0 on success, 
+#returns -1 if the username/email doens't exist
+#returns -2 if you guys are already friends
+def addFriend(userId, friendStringId):
+	#make sure the username/email exists
+	friendId = usernameDatabase.getUsernameUserId(friendStringId)
+	if friendId == None: 
+		friendId = emailDatabase.getEmailUserId(friendStringId)
+		if friendId == None:
+			return -1
+	elif friendId in userDatabase.getFriends(userId):
+		return -2
+
+	userDatabase.addFriend(userId, friendId)
+	return 0
+
+def getFriends(userId):
+	result = []
+	for tempId in userDatabase.getFriends(userId):
+		result.append(userDatabase.getUserInfo(tempId))
+
+	return result
+
 def changePasswordHash(userId, newPasswordHash):
 	userDatabase.changePasswordHash(userId, newPasswordHash)
 
@@ -149,10 +272,20 @@ def getUsernameUserId(username):
 	return usernameDatabase.getUsernameUserId(username)
 
 def getUserInfo(userId):
-	return userDatabase.getUserInfo(userId)
+	result = userDatabase.getUserInfo(userId)
+	result['userId'] = userId
+	return result
 
-def getUserInfo(userId):
-	return userDatabase.getUserInfo(userId)
+def getUserIdFromIdString(idString):
+	userId = usernameDatabase.getUsernameUserId(idString)
+	if userId == None: 
+		userId = emailDatabase.getEmailUserId(idString)
+		if userId == None:
+			return None
+	return userId	
+
+def getUserInfoFromIdString(idString):
+	return getUserInfo(getUserIdFromIdString(idString))
 
 def getEmailUserId(email):
 	return emailDatabase.getEmailUserId(email)
@@ -165,6 +298,13 @@ def getProjectInfo(projectId):
 
 def getProjectCount():
 	return globalDatabase.getProjectCount()
+
+def getAllUsernames():
+	return usernameDatabase.getAllUsernames()
+
+def getAllEmails():
+	return emailDatabase.getAllEmails()
+
 
 #TODO: make this return status with the userId
 #return 0 if success, -1 if username already exists, -2 if email already exists
@@ -192,6 +332,13 @@ def getAllPendingUsers():
 
 	return result
 
+#TODO:FIXME:
+def removeUser(userId):
+	userInfo = getUserInfo(userId)
+	usernameDatabase.removeUsername(userInfo['username'])
+	emailDatabase.removeEmail(userInfo['email'])
+	userDatabase.removeUser(userId)
+	#go through the lists a user is part of and remove him
 
 
 ######      #      #####   #######       #####   #######  #     # 
@@ -204,7 +351,7 @@ def getAllPendingUsers():
 
 
 #get the board info along with the OP post all the threads in that board
-def getBoardInfoPreview(boardId):
+def getBoardInfoPreview(boardId, currentUserId=None):
 	threadIds = boardDatabase.getBoardThreadListAll(boardId)
 	threads = []
 	for threadId in threadIds:
@@ -212,18 +359,36 @@ def getBoardInfoPreview(boardId):
 		thread['posts'] = getPostsRange(boardId, threadId, 0, 0)
 		threads.append(thread)
 
-	board = boardDatabase.getBoardInfo(boardId)
+	board = getBoardInfo(boardId)
 	board['boardId'] = boardId
 	board['threads'] = threads
+	board['userSettings'] = getBoardUserSettings(boardId, currentUserId)
+
 	return board
 
-def getAllBoardsPreview(boardList):
+def getBoardUserSettings(boardId, currentUserId=None):
+	result = {}
+	board = getBoardInfo(boardId)
+	if currentUserId != None:
+		if currentUserId == board['adminId']:
+			result['role'] = 'Admin'
+		elif currentUserId in board['modsList']:
+			result['role']  = 'Mod'
+			result['perms'] =  getModsPermissions(boardId, currentUserId)
+		else:
+			result['role'] = 'User'
+	else:
+		result['role'] = 'Anon'
+
+	return result
+
+def getAllBoardsPreview(boardList, userId=None):
 	if boardList == None:
 		return []
 
 	result = []
 	for boardId in boardList:
-		result.append(getBoardInfoPreview(boardId))
+		result.append(getBoardInfoPreview(boardId, userId))
 	return result
 
 def getAllPublicBoardsPreview():
@@ -236,4 +401,4 @@ def getIndexPageInfoForUser(userId):
 	boardList |= set(userDatabase.getModBoards(userId))
 	boardList |= set(userDatabase.getPrivateBoards(userId))
 	
-	return getAllBoardsPreview(boardList)
+	return getAllBoardsPreview(boardList, userId)

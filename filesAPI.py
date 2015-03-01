@@ -96,8 +96,7 @@ def get_hash(f):
   return hashlib.md5(f.read()).digest()
 
 def isValidFile( fileInfo, status ):
-  if not fileInfo['type'] in ['image']:#FIXME: hardcoded, also gifs are video !
-    #if it's a video make sure it's a gif
+  if not fileInfo['type'] in ['image']:#FIXME: hardcoded
     status['isValid'] = False
     status['reason']  = 'Error: File is not a valid image! '
   elif fileInfo['size'] < 0:

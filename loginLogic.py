@@ -25,7 +25,7 @@ class User(object):
 		return False
 
 	def get_id(self):
-		return self.userId
+		return str(self.userId)
 
 
 #returns a User object if valid userId, None otherwise

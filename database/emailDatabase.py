@@ -13,7 +13,7 @@ def addEmail(email, userId):
 	emailRedisDB.set(key, userId)
 
 def removeEmail(email):
-	emailRedisDB.lrem(email_list_key, email)
+	emailRedisDB.lrem(email_list_key, 0, email)
 	key = _emailKey(email)
 	emailRedisDB.delete(key)
 

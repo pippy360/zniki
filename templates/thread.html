@@ -6,6 +6,14 @@
 
 {% block head %}
     <link href="/static/threadStyle.css" rel="stylesheet">
+    <style type="text/css">
+.hoverBlue{
+  cursor: pointer;
+}
+.hoverBlue:hover{
+  color: #337ab7;
+}
+    </style>
     <script type="text/javascript">$BOARD_ID={{boardId}};</script>
 {% endblock %}
 
@@ -21,7 +29,11 @@
       </div>
       <div class="threadFirstPostRight">
         <div class="threadFirstPostTitle">
-          <span class="threadTitle">{{ thread['subject'] }}</span> - Thread id: {{ thread['threadId'] }} by {{thread['posts'][0].creatorName}}
+          <span class="threadTitle">{{ thread['subject'] }}</span> - Thread id: {{ thread['threadId'] }} by <span class="hoverBlue">{{thread['posts'][0].creatorName}}</span><span>
+          {% if userSettings['role'] == 'Admin' or (userSettings['role'] == 'Mod' and userSettings['perms']['removePosts'] == 'True') %}
+           - <a href="/board/{{boardId}}/thread/{{threadId}}/deleteThread">[Delete Thread]</a>
+          {% endif %}
+          </span>
         </div>
         <blockqoute class="threadFirstPostMessage">
           {{ thread['posts'][0].message }}
@@ -33,7 +45,12 @@
         <div class="postWrapper">
           <div class="post">
             <div class="postHeader">
-              <span class="postHeaderSpan postHeaderUsername">{{post.creatorName}} -</span><span class="postHeaderSpan postHeaderPostId">Post id: {{post.postId}}</span>
+              <span class="postHeaderSpan postHeaderUsername">Post id: {{post.postId}}</span> <span class="postHeaderUsernameGrey">by</span><span class="postHeaderSpan postHeaderPostId">{{post.creatorName}}</span>
+              <span>
+              {% if userSettings['role'] == 'Admin' or (userSettings['role'] == 'Mod' and userSettings['perms']['removePosts'] == 'True') %}
+                - <a href="/board/{{boardId}}/thread/{{threadId}}/removePost/{{post['postId']}}">[Delete Post]</a>
+              {% endif %}
+              </span>
             </div>
             <div class="postContents clearfix">
               <div class="postImageWrapper">
