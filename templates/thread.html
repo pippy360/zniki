@@ -68,7 +68,6 @@
         </div>
       {% endif %}
     {% endfor %}
-  </div><!--/thread-->
   <div class="formWrapper">
     <div class="newThreadForm">
       <form action="/board/{{boardId}}/thread/{{threadId}}/post" method="post"  enctype="multipart/form-data">
@@ -79,5 +78,7 @@
       </form>
     </div>
   </div>
+  </div><!--/thread-->
+
 </div><!--/threadsWrapper--> 
 {% endblock %}

@@ -86,7 +86,7 @@ def getPost(boardId, postId):
 	#convert the creatorId into a name (either username or anonymouse)
 	userId = postInfo.get('creatorId');
 	if userId == 'NULL':
-		postInfo['creatorName'] = 'Anonymouse'
+		postInfo['creatorName'] = 'Anonymous'
 	else:
 		userData = userDatabase.getUserInfo(userId)
 		if userData == {}:

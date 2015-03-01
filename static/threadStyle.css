@@ -83,7 +83,7 @@
   margin-bottom: 10px;
 }
 .formWrapper{
-  margin-left: 25px;
+  display: inline-block;
 }
 .formsTitle{
   font-size: 22px;
