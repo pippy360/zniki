@@ -498,7 +498,7 @@ def dashboardPage(errors=[]):
 @login.login_required
 def addFriendPage():
 	friendStringId = request.form.get('friendStringId')
-	if not (isValidUsername(friendStringId)['isValid'] or isValidEmail(friendStringId)['isValid']):
+	if friendStringId == None or friendStringId == '':
 		return redirect('/dashboard?friends=1&error=Error: Invalid Friend Id')
 
 	friendStringId = friendStringId.lower()
