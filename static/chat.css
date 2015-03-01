@@ -1,15 +1,10 @@
-.chat-bar {
+#chat-panel {
+	display: none; /*this gets changed by js*/
+
 	width: 100%;
 	position: fixed;
 	bottom: 0;
 	margin:0;
-}
-
-#chat-container li {
-	display: block; /*since the parent's is inline*/
-	float: left;
-	width: 200px;
-	height: 400px;
 }
 
 .chat-toggle-button {
@@ -17,4 +12,61 @@
 	text-align: center;
 	margin: 5;
 	border: 5;
+}
+
+#chat-list {
+	display: inline;
+	padding: 0;
+}
+
+#chat-list li {
+	background-color: #EEE;
+	display: block; /*since the parent's is inline*/
+	float: left;
+	width: 200px;
+	margin: 5px;
+	padding: 3px;
+}
+
+.chat-container {
+	
+}
+
+.chat-errors {
+	color: #F22;
+}
+
+.chat-header {
+
+}
+
+.chat-header-about {
+	font-size: 90%;
+}
+
+.chat-close-button {
+	float: right;
+}
+
+.chat-log {
+	overflow: auto;
+	word-wrap: break-word;
+	height: 300px; /*!!! this sets the height of the chat itself*/
+}
+
+.chat-log-entry {
+	color: #000;
+}
+
+.chat-log-handle {
+	font-weight: bold;
+}
+
+.chat-log-text {
+	color: #000;
+}
+
+.chat-text-input {
+	resize: none;
+	width: 100%;
 }

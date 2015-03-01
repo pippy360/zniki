@@ -2,10 +2,12 @@ from database import databaseFunctions
 import redis
 import filesAPI
 import thumbnailGenerator
-from flask import Flask, render_template, request, send_file, redirect, url_for
+from flask import Flask, render_template, request, send_file, redirect, url_for, abort, jsonify
 from flask.ext import login
 import loginLogic
 import utils
+import chat
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '123456790'
 
@@ -373,6 +375,146 @@ def changePasswordSubmitPage():
 		return redirect('/dashboard?success=Success: Password Changed')
 	else:
 		return redirect('/dashboard?error=Error: Password Change Failed, darn it :(')
+
+
+#chat
+@app.route('/chatBegin', methods=['POST']) #ajax
+@login.login_required
+def chatBegin():
+	json = request.get_json()
+	if json == None:
+		abort(400) #we are expecting "application/json"
+
+	initiatorId = login.current_user.userId
+	boardId = json['boardId']
+	postId = json['postId']
+
+	#now we must find out the userId of the poster of that postId for the relevant board and post therein
+	postInfo = databaseFunctions.getPost(boardId, postId)
+	receiverId = postInfo.get('creatorId')
+
+	if initiatorId == receiverId: #that's not very productive
+		abort(403)
+
+	#make sure the chat doesn't alredy exist
+	chatId = chat.getChatId(boardId, postId, initiatorId)
+
+	if chatId != None:
+		print 'warning: trying to initiate existing chat from user %s about board %s and post %s (to user %s)' % \
+			(initiatorId, boardId, postId, receiverId)
+		ch = chat.getChatInfo(chatId)
+		return jsonify(chatId = ch.id, state = ch.state)
+
+	else:
+		print 'initiating chat from user %s about board %s and post %s (to user %s)' % \
+			(initiatorId, boardId, postId, receiverId)
+		chatId = chat.beginChat(boardId, postId, initiatorId, receiverId)
+		return jsonify(chatId = chatId, state = 0)
+
+@app.route('/chatEnd', methods=['POST']) #ajax
+@login.login_required
+def chatEnd():
+	json = request.get_json()
+	if json == None:
+		abort(400) #we are expecting "application/json"
+
+	userId = login.current_user.userId
+	chatId = json['chatId']
+	reason = ''
+	if 'reason' in json:
+		reason = json['reason']
+
+	print 'user %s requested we end chat %s, because: %s', userId, chatId, reason
+
+	if not chat.isUserInChat(userId, chatId):
+		print 'but either the chat does not exist or the user is not part of the chat'
+		abort(403)
+
+	chat.endChat(chatId)
+	return jsonify(dummy = "dummy") #I think we absolutely have to return something
+
+@app.route('/chatPost', methods=['POST']) #ajax
+@login.login_required
+def chatPost():
+	json = request.get_json()
+	if json == None:
+		abort(400) #we are expecting "application/json"
+
+	userId = login.current_user.userId
+	chatId = json['chatId']
+	text = json['msg']
+
+	print 'chat post from user %s on chat %s' % (userId, chatId)
+	print 'chat message: %s' % text
+
+	if not chat.isUserInChat(userId, chatId):
+		print 'but either the chat does not exist or the user is not part of the chat'
+		abort(403)
+
+	newState = chat.postInChat(chatId, userId, text)
+	return jsonify(state = newState)
+
+@app.route('/chatPoll', methods=['POST']) #ajax
+@login.login_required
+def chatPoll():
+	json = request.get_json()
+	if json == None:
+		abort(400) #we are expecting "application/json"
+
+	userId = login.current_user.userId
+	clientStates = json['states'] #should be a {chatId => state} object
+
+	#convert state counters to integers
+	for k, v in clientStates.iteritems():
+		clientStates[k] = int(v)
+
+	print 'chat poll request from user %s, with states %s' % (userId, str(clientStates))
+	updates = {}
+
+	#give user updates on the chats they know about
+	#as well as new ones they're not aware of
+
+	allChats = chat.getAllChatsWithUser(userId)
+	for chatId in allChats:
+		clientState = 0
+		if chatId in clientStates:
+			clientState = clientStates[chatId]
+
+		chatInfo = chat.getChatInfo(chatId)
+		otherId = chatInfo.fromId if userId == chatInfo.toId else chatInfo.toId
+		otherName = databaseFunctions.getUserInfo(otherId)['username']
+
+		if chatInfo.state > 0 or userId == chatInfo.fromId:
+			#this check exists so that a poster is not immediately told of a new chat,
+			#before the initiator has typed the first reply
+			updates[chatId] = {
+				'boardId': chatInfo.boardId,
+				'postId': chatInfo.postId,
+				'partnerName': otherName,
+				'updates': chat.getUpdates(chatId, userId, clientState)
+			}
+
+	#TODO: check if user is trying to get updates for chats they're not part of
+	#if chat.isUserInChat(userId, chatId):
+	
+	#TODO: tell the client somehow when a chat has ended, why it has ended
+
+	print 'returning', updates
+	return jsonify(**updates)
+
+# @app.route('/chatStream', methods=['POST']) #web socket
+# @login.login_required
+# def chatPost():
+#   if json == None:
+# 	  abort(500) #we are expecting "application/json"
+#   print 'begin-chat request, json:', json
+# 
+# 	userId = login.current_user.userId
+# 	chatId = request.form.get('chatId')
+# 	clientState = request.form.get('state')
+
+# 	#return flask.Response(event_stream(), mimetype="text/event-stream")
+
 
 
 def init_login():

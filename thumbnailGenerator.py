@@ -5,7 +5,7 @@
 
 from flask import send_file
 import os.path
-import Image
+from PIL import Image
 import math
 from database import databaseFunctions
 

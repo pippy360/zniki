@@ -36,8 +36,8 @@ def getUserFromId(userId):
 	if userData == None or userData == {}:
 		return None
 
-	print 'userData'
-	print userData
+	#print 'userData'
+	#print userData
 
 	return User(userId, 1, False, userData.get('isAdmin'), 
 				userData['username'], userData['email'], userData['passwordHash'],
