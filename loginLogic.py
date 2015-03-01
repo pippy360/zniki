@@ -1,6 +1,7 @@
 from flask import Flask
 from flask.ext import login
 from database import databaseFunctions
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(object):
 
@@ -68,9 +69,7 @@ def loginUser(userStringId, password):
 		status['reason'] = 'Error: You registration has not been accepted yet.'
 		return status
 
-	hashedPassword = password#plain text
-
-	if not hashedPassword == tempUser.passwordHash:
+	if not checkUserPassword(tempUser, password):
 		status['reason'] = 'Error: Wrong password.'
 		return status
 
@@ -80,3 +79,8 @@ def loginUser(userStringId, password):
 	status['isValid'] = True
 	return status
 
+def hashPassword(password):
+	return generate_password_hash(password)
+
+def checkUserPassword(userObj, passwordStr):
+	return  check_password_hash(userObj.passwordHash, passwordStr)

@@ -464,12 +464,16 @@ def signUpSubmitPage():
 	if not status['isValid']:
 		return redirect('/login?error=Error: '+status['reason'])
 	
+	print 'hashing password --'+password1+'--'
+	passwordHash = loginLogic.hashPassword(password1);
+	print 'hashing password --'+password1+'--'
+	passwordHash = loginLogic.hashPassword(password1);
 	if not password1 == password2:
 		return redirect('/login?error=Error: Passwords did not match')
 	else:
 		email 	 = email.lower()#Emails are always stored as lowercase
 		username = username.lower()#Usernames are always stored as lowercase
-		returnCode = databaseFunctions.addUser(email, username, password1, 0)
+		returnCode = databaseFunctions.addUser(email, username, passwordHash, 0)
 		if returnCode == -1:
 			return redirect('/login?error=Error: Username Taken')
 		elif returnCode == -2:
@@ -589,7 +593,8 @@ def changePasswordSubmitPage():
 	if status['isValid']:
 
 		oldPasswordHash = oldPassword;
-		if oldPasswordHash != login.current_user.passwordHash:#the old password
+		#check if they gave the right old password
+		if loginLogic.checkUserPassword(login.current_user, oldPasswordHash):
 			return redirect('/changePassword?error=Error: Wrong Old password.')
 		elif newPassword1 != newPassword2:
 			return redirect('/changePassword?error=Error: New Passwords didn\'t Match')
@@ -614,6 +619,21 @@ def leaveGroupPage(boardId):
 	databaseFunctions.removeUserFromBoard(boardId, login.current_user.get_id())
 	return redirect('/')
 
+@app.route('/changeUserProfilePicSubmit', methods=['post'])
+@login.login_required
+def changeUserProfilePicSubmitPage():
+	if (len(request.files) > 0 and request.files.get('profilePic') != None 
+				and request.files.get('profilePic').filename != ''):
+
+		status = filesAPI.handleUploadFormSubmit(request.files)
+		if not status['isValid']:
+			return redirect('/thread/')
+
+		fileId = databaseFunctions.addFileToDatabase(status['fileInfo'], "192.0.0.1")
+		databaseFunctions.changeUserProfilePic(login.current_user.get_id(), fileId)
+		return redirect('/thread/')
+	else:
+		return redirect('/thread/')
 
 
 def init_login():

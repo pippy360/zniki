@@ -43,7 +43,7 @@
         <div class="postWrapper">
           <div class="post">
             <div class="postHeader">
-              <span class="postHeaderSpan postHeaderUsername">Post id: {{post.postId}}</span> <span class="postHeaderUsernameGrey">by</span><span class="postHeaderSpan postHeaderPostId">{{post.creatorName}}</span>
+              <span class="postHeaderSpan postHeaderPostId" id="span_postId">Post id: {{post.postId}}</span> <span class="postHeaderUsernameGrey">by</span><span class="postHeaderSpan postHeaderUsername" id="span_postUsername">{{post.creatorName}}</span>
               <span>
               {% if userSettings['role'] == 'Admin' or (userSettings['role'] == 'Mod' and userSettings['perms']['removePosts'] == 'True') %}
                 - <a href="/board/{{boardId}}/thread/{{threadId}}/removePost/{{post['postId']}}">[Delete Post]</a>

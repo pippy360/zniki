@@ -96,6 +96,10 @@
       <div role="tabpanel" class="tab-pane" id="settings">
       {% endif %}
         <div>
+          <form action="/changeUserProfilePicSubmit" method="post"  enctype="multipart/form-data">
+            <input name="profilePic" type="file">
+            <input class="submitButton" type="submit">
+          </form>
           <div>
             <a href="/changeUsername">Change Username</a>
             <br>

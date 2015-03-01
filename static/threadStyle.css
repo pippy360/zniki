@@ -43,17 +43,17 @@
 .postHeaderSpan{
   padding-left: 5px;
 }
-.postHeaderPostId{
+.postHeaderUsername{
   cursor: pointer;
   color: #666;
 }
-.postHeaderPostId:hover{
+.postHeaderUsername:hover{
   color: #337ab7;
 }
-.postHeaderUsername{
+.postHeaderPostId{
   cursor: pointer;
 }
-.postHeaderUsername:hover{
+.postHeaderPostId:hover{
   color: #337ab7;
 }
 .postHeaderUsernameGrey{
