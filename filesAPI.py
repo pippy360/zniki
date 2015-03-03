@@ -21,7 +21,7 @@ fileInfo = {
 #gets the fileinfo and then saves it, 
 #returns the fileinfo with the location of the file
 #returns a "status" dict (see layout 2 lines below)
-def handleUploadFormSubmit(filesMultiDict, tempHiddenLocation="./tempFileStore/", 
+def handleUploadFormSubmit(inFile, tempHiddenLocation="./tempFileStore/", 
                             finalLocation="./static/storage/"):
   status = {
     'isValid': False,
@@ -29,8 +29,7 @@ def handleUploadFormSubmit(filesMultiDict, tempHiddenLocation="./tempFileStore/"
     'databaseId': '',#file Id not to be decided until 
     'fileInfo': {}
   }
-  f = filesMultiDict['photo']
-  return handleRecivedFile(f, tempHiddenLocation, finalLocation, status)
+  return handleRecivedFile(inFile, tempHiddenLocation, finalLocation, status)
   
 
 #this takes in a flask fileStorageObj, moves it to a hidden (from public access) folder

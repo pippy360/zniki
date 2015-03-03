@@ -309,6 +309,8 @@ def getAllUsernames():
 def getAllEmails():
 	return emailDatabase.getAllEmails()
 
+def changeUserProfilePic(userId, fileId):
+	userDatabase.changeUserProfilePic(userId, fileId)
 
 #TODO: make this return status with the userId
 #return 0 if success, -1 if username already exists, -2 if email already exists

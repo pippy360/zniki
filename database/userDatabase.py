@@ -42,6 +42,11 @@ def getUserInfo(userId):
   key = _activeKey(userId)
   return activeRedisDB.hgetall(key)
 
+def changeUserProfilePic(userId, fileId):
+  key = _activeKey(userId)
+  activeRedisDB.hset(key, 'profilePicFileId', fileId)
+  activeRedisDB.hset(key, 'hasProfilePic', True)
+
 
 #friends
 def getFriends(userId):

@@ -1,4 +1,48 @@
 import re
+from database import databaseFunctions
+
+
+def isUserInBoardUserList(currentUser, boardId):
+	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	if boardInfo['isPrivate'] != 'True':
+		return True
+
+	if not currentUser.is_authenticated():
+		return False
+
+	userId = currentUser.get_id()
+	if userId == boardInfo['adminId']:
+		return True
+	elif userId in boardInfo['usersList']:
+		return True
+	else:
+		return False
+
+def canAddUser(currentUser, boardId):
+	if not currentUser.is_authenticated():
+		return False
+
+	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	#check if he's the admin
+	#then check if he's a mod with the permission
+	pass
+
+def canKickUser(currentUser, boardId):
+	if not currentUser.is_authenticated():
+		return False
+
+	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	#check if he's the admin
+	pass
+
+def canRemovePost(currentUser, boardId):
+	if not currentUser.is_authenticated():
+		return False
+
+	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	#check if he's the admin
+	pass
+
 
 #all the isValid* functions return a status dict
 #status = {
