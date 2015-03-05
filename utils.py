@@ -18,30 +18,70 @@ def isUserInBoardUserList(currentUser, boardId):
 	else:
 		return False
 
+def isAdmin(currentUser, boardId):
+	if not currentUser.is_authenticated():
+		return False
+
+	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	if currentUser.get_id() == boardInfo['adminId']:
+		return True
+	else:
+		return False
+
 def canAddUser(currentUser, boardId):
 	if not currentUser.is_authenticated():
 		return False
 
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
-	#check if he's the admin
-	#then check if he's a mod with the permission
-	pass
+	if currentUser.get_id() == boardInfo['adminId']:
+		return True
+	elif currentUser.get_id() in boardInfo['modsList']:
+		perms = databaseFunctions.getModsPermissions(boardId, currentUser.get_id())
+		print 'perms'
+		print perms
+		if perms['addUsers'] == 'True':
+			return True
+		else:
+			return False
+	else:
+		return False
 
 def canKickUser(currentUser, boardId):
 	if not currentUser.is_authenticated():
 		return False
 
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
-	#check if he's the admin
-	pass
+	if currentUser.get_id() == boardInfo['adminId']:
+		return True
+	elif currentUser.get_id() in boardInfo['modsList']:
+		perms = databaseFunctions.getModsPermissions(boardId, currentUser.get_id())
+		print 'perms'
+		print perms
+		if perms['kickUsers'] == 'True':
+			return True
+		else:
+			return False
+	else:
+		return False
 
 def canRemovePost(currentUser, boardId):
 	if not currentUser.is_authenticated():
 		return False
 
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
-	#check if he's the admin
-	pass
+	if currentUser.get_id() == boardInfo['adminId']:
+		return True
+	elif currentUser.get_id() in boardInfo['modsList']:
+		perms = databaseFunctions.getModsPermissions(boardId, currentUser.get_id())
+		print 'perms'
+		print perms
+		if perms['removePosts'] == 'True':
+			return True
+		else:
+			return False
+	else:
+		return False
+
 
 
 #all the isValid* functions return a status dict

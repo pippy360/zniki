@@ -42,7 +42,7 @@ def getUserFromId(userId):
 	print 'userData'
 	print userData
 
-	hasProfilePic = userData['hasProfilePic']
+	hasProfilePic = userData.get('hasProfilePic')
 	profilePicFileId = userData.get('profilePicFileId')
 	hasProfilePic = (hasProfilePic == 'True')
 

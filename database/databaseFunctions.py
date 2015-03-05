@@ -199,8 +199,12 @@ def removeBoard(boardId):
 
 	boardDatabase.removeBoard(boardId)
 	globalDatabase.removeBoardIdFromBoardList(boardId)
-	if not boardInfo['isPrivate'] == 'False':
+	print 'boardInfo[isPrivate]'
+	print boardInfo['isPrivate']
+
+	if boardInfo['isPrivate'] == 'False':
 		globalDatabase.removeBoardIdFromPublicBoardList(boardId)
+
 	#now remove from admin
 	userDatabase.removeAdminBoard(boardInfo['adminId'], boardId)
 	removeUserFromBoard(boardId, boardInfo['adminId'])
@@ -366,6 +370,9 @@ def getBoardInfoPreview(boardId, currentUserId=None):
 		threads.append(thread)
 
 	board = getBoardInfo(boardId)
+	print 'the bad board'
+	print board
+
 	board['boardId'] = boardId
 	board['threads'] = threads
 	board['userSettings'] = getBoardUserSettings(boardId, currentUserId)
@@ -404,7 +411,6 @@ def getAllPublicBoardsPreview():
 def getIndexPageInfoForUser(userId):
 	boardList  = set(globalDatabase.getPublicBoardList())
 	boardList |= set(userDatabase.getAdminBoards(userId))
-	boardList |= set(userDatabase.getModBoards(userId))
 	boardList |= set(userDatabase.getPrivateBoards(userId))
 	
 	return getAllBoardsPreview(boardList, userId)

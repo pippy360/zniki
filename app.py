@@ -7,7 +7,7 @@ from flask.ext import login
 import loginLogic
 import utils
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '8pp3dStringb38rb'
+app.config['SECRET_KEY'] = '8p3p3d'
 
 
 #postRedisDB = redis.StrictRedis( '127.0.0.1', 6379 )
@@ -302,8 +302,8 @@ def deleteBoardPage(boardId):
 @app.route('/<boardId>/createNewConv')
 def createNewConversationPage(boardId):
 	#check if the user is allowed to post to this board
-	if not utils.isUserInBoardUserList(login.current_user.get_id(), boardId):
-		return redirect('/?errors=Error: You do not have permission to view this page')
+	if not utils.isUserInBoardUserList(login.current_user, boardId):
+		return redirect('/?error=Error: You do not have permission to view this page')
 
 	errors = []
 	if request.args.get('error') != None:
@@ -317,8 +317,8 @@ def createNewConversationPage(boardId):
 @login.login_required
 def deleteThread(boardId, threadId):
 	#check if the user is allowed to post to this board
-	if not utils.canRemovePost(login.current_user.get_id(), boardId):
-		return redirect('/?errors=Error: You do not have permission to view this page')
+	if not utils.canRemovePost(login.current_user, boardId):
+		return redirect('/?error=Error: You do not have permission to view this page')
 
 	databaseFunctions.removeThread(boardId, threadId)
 	return redirect('/')
@@ -327,7 +327,7 @@ def deleteThread(boardId, threadId):
 def threadSubmitPage(boardId):
 	#check if the user is a part of this board	
 	if not utils.isUserInBoardUserList(login.current_user, boardId):
-		return redirect('/?errors=Error: You do not have permission to view this page')
+		return redirect('/?error=Error: You do not have permission to view this page')
 
 	threadId = ''
 	subject = request.form.get('subject')
@@ -335,7 +335,7 @@ def threadSubmitPage(boardId):
 
 	#check if the user is a part of this board	
 	if not utils.isUserInBoardUserList(login.current_user, boardId):
-		return redirect('/?errors=Error: You do not have permission to view this page')
+		return redirect('/?error=Error: You do not have permission to view this page')
 
 	if subject != None and comment != None and request.files.get('photo') != None:
 		
@@ -372,7 +372,7 @@ def threadSubmitPage(boardId):
 def showThreadPage(boardId, threadId, errors=[]):
 	#check if the user is a part of this board
 	if not utils.isUserInBoardUserList(login.current_user, boardId):
-		return redirect('/?errors=Error: You do not have permission to view this page')
+		return redirect('/?error=Error: You do not have permission to view this page')
 
 	if request.args.get('error') != None:
 		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
@@ -394,7 +394,7 @@ def showThreadPage(boardId, threadId, errors=[]):
 def post(boardId, threadId):
 	#check if the user is a part of this board	
 	if not utils.isUserInBoardUserList(login.current_user, boardId):
-		return redirect('/?errors=Error: You do not have permission to view this page')
+		return redirect('/?error=Error: You do not have permission to view this page')
 
 	comment = request.form.get('postContent')
 	if comment or (len(request.files) > 0 and request.files.get('photo') != None 
@@ -431,8 +431,8 @@ def post(boardId, threadId):
 @login.login_required
 def removePostPage(boardId, threadId, postId):
 	#check if the user is allowed to post to this board
-	if not utils.canRemovePost(login.current_user.get_id(), boardId):
-		return redirect('/?errors=Error: You do not have permission to view this page')
+	if not utils.canRemovePost(login.current_user, boardId):
+		return redirect('/?error=Error: You do not have permission to view this page')
 
 	databaseFunctions.removePost(boardId, threadId, postId)
 	return redirect('/board/'+boardId+'/thread/'+threadId)
