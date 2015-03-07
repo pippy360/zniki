@@ -370,8 +370,6 @@ def getBoardInfoPreview(boardId, currentUserId=None):
 		threads.append(thread)
 
 	board = getBoardInfo(boardId)
-	print 'the bad board'
-	print board
 
 	board['boardId'] = boardId
 	board['threads'] = threads

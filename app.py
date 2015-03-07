@@ -7,7 +7,7 @@ from flask.ext import login
 import loginLogic
 import utils
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '8p3p3d'
+app.config['SECRET_KEY'] = '8pp3d'
 
 
 #postRedisDB = redis.StrictRedis( '127.0.0.1', 6379 )
@@ -97,7 +97,7 @@ def createNewGroupSubmitPage():
 def addUsersSubmitPage(boardId):
 	#check if the user is a part of this board
 	if not utils.canAddUser(login.current_user, boardId):
-		return redirect('/?errors=Error: You do not have permission to add users')
+		return redirect('/?error=Error: You do not have permission to add users')
 
 	newUser = request.form.get("input_newUser")	
 	if newUser == None or newUser == '':
@@ -107,20 +107,22 @@ def addUsersSubmitPage(boardId):
 	newUserId = databaseFunctions.getUserIdFromIdString(newUser)
 	if newUserId == None:
 		return redirect('/'+boardId+'/settings?error=Error: The username "'+newUser+'" didn\'t match any users')
+	elif newUserId == login.current_user.get_id():
+		return redirect('/'+boardId+'/settings?error=Error: You can\'t add yourself')
 
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
 	if boardInfo == None:
 		return redirect('/'+boardId+'/settings?error=Error: Invalid board Id')
-
-	if (login.current_user.userId == boardInfo['adminId'] 
-			or login.current_user.userId in boardInfo['modsList']):
-		if boardInfo['isPrivate'] == 'True':
-			databaseFunctions.addUserToBoard(newUserId, boardId)
-			return redirect('/'+boardId+'/settings?success=Success: user added')
-		else:
-			return redirect('/'+boardId+'/settings?error=Error: Not a private board')
+	elif newUserId == boardInfo['adminId']:
+		return redirect('/'+boardId+'/settings?error=Error: You can\'t add the admin as a user') 
+	elif newUserId in boardInfo['usersList']: 
+		return redirect('/'+boardId+'/settings?error=Error: '+newUser+' is already a member of this group')
+	
+	if boardInfo['isPrivate'] == 'True':
+		databaseFunctions.addUserToBoard(newUserId, boardId)
+		return redirect('/'+boardId+'/settings?success=Success: user added')
 	else:
-		return redirect('/'+boardId+'/settings?error=Error: You are not an Admin or Mod of this board')
+		return redirect('/'+boardId+'/settings?error=Error: Not a private board')
 
 	return redirect('/')
 
@@ -129,7 +131,7 @@ def addUsersSubmitPage(boardId):
 def addModsSubmitPage(boardId):
 	#check if the user is a part of this board
 	if not utils.isAdmin(login.current_user, boardId):
-		return redirect('/?errors=Error: You do not have permission to add users')
+		return redirect('/?error=Error: You do not have permission to add users')
 
 	newMod = request.form.get("input_newMod")
 
@@ -140,30 +142,27 @@ def addModsSubmitPage(boardId):
 	newModId = databaseFunctions.getUserIdFromIdString(newMod)
 	if newModId == None:
 		return redirect('/'+boardId+'/settings?error=Error: The username "'+newMod+'" didn\'t match any users')
+	elif newModId == login.current_user.get_id():
+		return redirect('/'+boardId+'/settings?error=Error: you can\'t add yourself as a mod !')
 
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
 	if boardInfo == None:
 		return redirect('/'+boardId+'/settings?error=Error: Invalid board Id')
 
-	if login.current_user.get_id() == boardInfo['adminId'] :
-		databaseFunctions.addModToBoard(newModId, boardId)
-		return redirect('/'+boardId+'/settings?success=Success: mod added')
-	else:
-		return redirect('/'+boardId+'/settings?error=Error: You are not an admin of this board')
-
-	return redirect('/')
+	databaseFunctions.addModToBoard(newModId, boardId)
+	return redirect('/'+boardId+'/settings?success=Success: mod added')
 
 @app.route('/<boardId>/changeGroupNameSubmit', methods=['post'])
 @login.login_required
 def changeGroupNameSubmitPage(boardId):
 	#check if the user is a part of this board
 	if not utils.isAdmin(login.current_user, boardId):
-		return redirect('/?errors=Error: You do not have permission to add users')
+		return redirect('/?error=Error: You do not have permission to add users')
 
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
 	newName   = request.form.get('input_newName')
 
-	status = isValidGroupName(newName)
+	status = utils.isValidGroupName(newName)
 	if not status['isValid']:
 		return redirect('/'+boardId+'/settings?error=Error: '+status['reason'])
 
@@ -178,7 +177,7 @@ def changeGroupNameSubmitPage(boardId):
 def changeGroupPasswordSubmitPage(boardId):
 	#check if the user is a part of this board
 	if not utils.isAdmin(login.current_user, boardId):
-		return redirect('/?errors=Error: You do not have permission to add users')
+		return redirect('/?error=Error: You do not have permission to add users')
 
 	boardInfo   = databaseFunctions.getBoardInfo(boardId)
 	newPassword = request.form.get('input_newPassword')
@@ -198,7 +197,7 @@ def changeGroupPasswordSubmitPage(boardId):
 def changeModPermsPage(boardId, modId,errors=[]):
 	#check if the user is a part of this board
 	if not utils.isAdmin(login.current_user, boardId):
-		return redirect('/?errors=Error: You do not have permission to add users')
+		return redirect('/?error=Error: You do not have permission to add users')
 
 	addUsers 	= request.form.get('addUsers', False)
 	kickUsers 	= request.form.get('kickUsers', False)
@@ -212,7 +211,7 @@ def changeModPermsPage(boardId, modId,errors=[]):
 def togglePrivatePage(boardId,errors=[]):
 	#check if the user is a part of this board
 	if not utils.isAdmin(login.current_user, boardId):
-		return redirect('/?errors=Error: You do not have permission to add users')
+		return redirect('/?error=Error: You do not have permission to add users')
 
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
 	if boardInfo['isPrivate'] == 'True':
@@ -228,7 +227,7 @@ def settingsPage(boardId,errors=[]):
 	#NO NEED FOR THIS SECURITY CHECK, IT'S HANDLED BETTER BELOW
 	#if not utils.isAdmin(login.current_user, boardId) 
 	#		and not utils.isMod(login.current_user, boardId):
-	#	return redirect('/?errors=Error: You do not have permission to add users')
+	#	return redirect('/?error=Error: You do not have permission to add users')
 
 	if request.args.get('error') != None:
 		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
@@ -262,7 +261,7 @@ def settingsPage(boardId,errors=[]):
 def removeModPage(boardId, modId,errors=[]):
 	#check if the user is a part of this board
 	if not utils.isAdmin(login.current_user, boardId):
-		return redirect('/?errors=Error: You do not have permission to add users')
+		return redirect('/?error=Error: You do not have permission to add users')
 
 	databaseFunctions.removeModFromBoard(boardId, modId)
 	return redirect('/'+boardId+'/settings?success=Success: Mod Removed')
@@ -272,7 +271,11 @@ def removeModPage(boardId, modId,errors=[]):
 def kickUserPage(boardId, userId,errors=[]):
 	#check if the user is a part of this board
 	if not utils.canKickUser(login.current_user, boardId):
-		return redirect('/?errors=Error: You do not have permission to add users')
+		return redirect('/?error=Error: You do not have permission to add users')
+
+	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	if login.current_user.get_id() != boardInfo['adminId'] and userId in boardInfo['modsList']:
+		return redirect('/'+boardId+'/settings?error=Error: You can\' remove a user who is also a mod')
 
 	databaseFunctions.removeUserFromBoard(boardId, userId)
 	return redirect('/'+boardId+'/settings?success=Success: User Kicked')
@@ -282,7 +285,7 @@ def kickUserPage(boardId, userId,errors=[]):
 def deleteBoardPage(boardId):
 	#check if the user is a part of this board
 	if not utils.isAdmin(login.current_user, boardId):
-		return redirect('/?errors=Error: You do not have permission to add users')
+		return redirect('/?error=Error: You do not have permission to add users')
 
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
 	if login.current_user.userId == boardInfo['adminId']:
@@ -371,20 +374,22 @@ def threadSubmitPage(boardId):
 @app.route("/board/<boardId>/thread/<threadId>/")
 def showThreadPage(boardId, threadId, errors=[]):
 	#check if the user is a part of this board
+	thread = databaseFunctions.getThread(boardId, threadId)
+	if thread == None:
+		return redirect('/?error=Error: Thread doesn\'t exist.')
+
 	if not utils.isUserInBoardUserList(login.current_user, boardId):
 		return redirect('/?error=Error: You do not have permission to view this page')
 
 	if request.args.get('error') != None:
 		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
 
-	thread = databaseFunctions.getThread(boardId, threadId)
+
 	if login.current_user.is_authenticated():
 		userSettings = databaseFunctions.getBoardUserSettings(boardId, login.current_user.get_id())
 	else: 
 		userSettings = databaseFunctions.getBoardUserSettings(boardId, None)
 
-	if thread == None:
-		return redirect('/?error=Error: Thread doesn\'t exist.')
 	boardName = databaseFunctions.getBoardName(boardId)
 	return render_template("thread.html", userSettings=userSettings, boardName=boardName, boardId=boardId, 
 							thread=thread, threadId=threadId,errors=errors)
@@ -490,9 +495,6 @@ def signUpSubmitPage():
 	if not status['isValid']:
 		return redirect('/login?error=Error: '+status['reason'])
 	
-	print 'hashing password --'+password1+'--'
-	passwordHash = loginLogic.hashPassword(password1);
-	print 'hashing password --'+password1+'--'
 	passwordHash = loginLogic.hashPassword(password1);
 	if not password1 == password2:
 		return redirect('/login?error=Error: Passwords did not match')
@@ -618,9 +620,7 @@ def changePasswordSubmitPage():
 	status = utils.isValidPassword(newPassword1)
 	if status['isValid']:
 
-		oldPasswordHash = oldPassword;
-		#check if they gave the right old password
-		if loginLogic.checkUserPassword(login.current_user, oldPasswordHash):
+		if loginLogic.checkUserPassword(login.current_user, oldPassword):
 			return redirect('/changePassword?error=Error: Wrong Old password.')
 		elif newPassword1 != newPassword2:
 			return redirect('/changePassword?error=Error: New Passwords didn\'t Match')

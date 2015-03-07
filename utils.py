@@ -4,6 +4,9 @@ from database import databaseFunctions
 
 def isUserInBoardUserList(currentUser, boardId):
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	if boardInfo == None:
+		return False
+	
 	if boardInfo['isPrivate'] != 'True':
 		return True
 
@@ -23,6 +26,9 @@ def isAdmin(currentUser, boardId):
 		return False
 
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	if boardInfo == None:
+		return False
+	
 	if currentUser.get_id() == boardInfo['adminId']:
 		return True
 	else:
@@ -33,12 +39,14 @@ def canAddUser(currentUser, boardId):
 		return False
 
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	if boardInfo == None:
+		return False
+	
 	if currentUser.get_id() == boardInfo['adminId']:
 		return True
 	elif currentUser.get_id() in boardInfo['modsList']:
 		perms = databaseFunctions.getModsPermissions(boardId, currentUser.get_id())
-		print 'perms'
-		print perms
+		
 		if perms['addUsers'] == 'True':
 			return True
 		else:
@@ -51,12 +59,14 @@ def canKickUser(currentUser, boardId):
 		return False
 
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	if boardInfo == None:
+		return False
+	
 	if currentUser.get_id() == boardInfo['adminId']:
 		return True
 	elif currentUser.get_id() in boardInfo['modsList']:
 		perms = databaseFunctions.getModsPermissions(boardId, currentUser.get_id())
-		print 'perms'
-		print perms
+		
 		if perms['kickUsers'] == 'True':
 			return True
 		else:
@@ -73,8 +83,7 @@ def canRemovePost(currentUser, boardId):
 		return True
 	elif currentUser.get_id() in boardInfo['modsList']:
 		perms = databaseFunctions.getModsPermissions(boardId, currentUser.get_id())
-		print 'perms'
-		print perms
+		
 		if perms['removePosts'] == 'True':
 			return True
 		else:
