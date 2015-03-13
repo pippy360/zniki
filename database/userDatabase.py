@@ -7,13 +7,17 @@ admin_boards_list_key = '_admin_boards'
 mod_boards_list_key = '_mods_boards'
 private_boards_list_key = '_private_boards'
 
-def addUser(userId, email, username, passwordHash, isAdmin, reputation):
+def addUser(userId, email, username, passwordHash, isAdmin, reputation, profilePicFileId=None):
+
+  hasProfilePic = (profilePicFileId != None)
   user = {
     'email':email,
     'username':username,
     'passwordHash':passwordHash,
     'reputation':reputation,
-    'isAdmin':isAdmin
+    'isAdmin':isAdmin,
+    'hasProfilePic':hasProfilePic,
+    'profilePicFileId':''
   }
   key = _activeKey(userId)
   activeRedisDB.hmset(key, user)
@@ -37,6 +41,11 @@ def removeUser(userId):
 def getUserInfo(userId):
   key = _activeKey(userId)
   return activeRedisDB.hgetall(key)
+
+def changeUserProfilePic(userId, fileId):
+  key = _activeKey(userId)
+  activeRedisDB.hset(key, 'profilePicFileId', fileId)
+  activeRedisDB.hset(key, 'hasProfilePic', True)
 
 
 #friends

@@ -1,4 +1,97 @@
 import re
+from database import databaseFunctions
+
+
+def isUserInBoardUserList(currentUser, boardId):
+	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	if boardInfo == None:
+		return False
+	
+	if boardInfo['isPrivate'] != 'True':
+		return True
+
+	if not currentUser.is_authenticated():
+		return False
+
+	userId = currentUser.get_id()
+	if userId == boardInfo['adminId']:
+		return True
+	elif userId in boardInfo['usersList']:
+		return True
+	else:
+		return False
+
+def isAdmin(currentUser, boardId):
+	if not currentUser.is_authenticated():
+		return False
+
+	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	if boardInfo == None:
+		return False
+	
+	if currentUser.get_id() == boardInfo['adminId']:
+		return True
+	else:
+		return False
+
+def canAddUser(currentUser, boardId):
+	if not currentUser.is_authenticated():
+		return False
+
+	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	if boardInfo == None:
+		return False
+	
+	if currentUser.get_id() == boardInfo['adminId']:
+		return True
+	elif currentUser.get_id() in boardInfo['modsList']:
+		perms = databaseFunctions.getModsPermissions(boardId, currentUser.get_id())
+		
+		if perms['addUsers'] == 'True':
+			return True
+		else:
+			return False
+	else:
+		return False
+
+def canKickUser(currentUser, boardId):
+	if not currentUser.is_authenticated():
+		return False
+
+	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	if boardInfo == None:
+		return False
+	
+	if currentUser.get_id() == boardInfo['adminId']:
+		return True
+	elif currentUser.get_id() in boardInfo['modsList']:
+		perms = databaseFunctions.getModsPermissions(boardId, currentUser.get_id())
+		
+		if perms['kickUsers'] == 'True':
+			return True
+		else:
+			return False
+	else:
+		return False
+
+def canRemovePost(currentUser, boardId):
+	if not currentUser.is_authenticated():
+		return False
+
+	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	if currentUser.get_id() == boardInfo['adminId']:
+		return True
+	elif currentUser.get_id() in boardInfo['modsList']:
+		perms = databaseFunctions.getModsPermissions(boardId, currentUser.get_id())
+		
+		if perms['removePosts'] == 'True':
+			return True
+		else:
+			return False
+	else:
+		return False
+
+
 
 #all the isValid* functions return a status dict
 #status = {

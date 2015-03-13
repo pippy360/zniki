@@ -86,7 +86,7 @@ def getPost(boardId, postId):
 	#convert the creatorId into a name (either username or anonymouse)
 	userId = postInfo.get('creatorId');
 	if userId == 'NULL':
-		postInfo['creatorName'] = 'Anonymouse'
+		postInfo['creatorName'] = 'Anonymous'
 	else:
 		userData = userDatabase.getUserInfo(userId)
 		if userData == {}:
@@ -199,8 +199,12 @@ def removeBoard(boardId):
 
 	boardDatabase.removeBoard(boardId)
 	globalDatabase.removeBoardIdFromBoardList(boardId)
-	if not boardInfo['isPrivate'] == 'False':
+	print 'boardInfo[isPrivate]'
+	print boardInfo['isPrivate']
+
+	if boardInfo['isPrivate'] == 'False':
 		globalDatabase.removeBoardIdFromPublicBoardList(boardId)
+
 	#now remove from admin
 	userDatabase.removeAdminBoard(boardInfo['adminId'], boardId)
 	removeUserFromBoard(boardId, boardInfo['adminId'])
@@ -242,9 +246,11 @@ def changeEmail(userId, newEmail):
 	userDatabase.changeEmail(userId, newEmail)
 	emailDatabase.addEmail(newEmail, userId)
 
+#todo: return a dict here instead !!
 #returns 0 on success, 
 #returns -1 if the username/email doens't exist
 #returns -2 if you guys are already friends
+#returns -3 if you're trying to add yourself
 def addFriend(userId, friendStringId):
 	#make sure the username/email exists
 	friendId = usernameDatabase.getUsernameUserId(friendStringId)
@@ -254,6 +260,8 @@ def addFriend(userId, friendStringId):
 			return -1
 	elif friendId in userDatabase.getFriends(userId):
 		return -2
+	elif friendId == userId:
+		return -3
 
 	userDatabase.addFriend(userId, friendId)
 	return 0
@@ -305,6 +313,8 @@ def getAllUsernames():
 def getAllEmails():
 	return emailDatabase.getAllEmails()
 
+def changeUserProfilePic(userId, fileId):
+	userDatabase.changeUserProfilePic(userId, fileId)
 
 #TODO: make this return status with the userId
 #return 0 if success, -1 if username already exists, -2 if email already exists
@@ -360,6 +370,7 @@ def getBoardInfoPreview(boardId, currentUserId=None):
 		threads.append(thread)
 
 	board = getBoardInfo(boardId)
+
 	board['boardId'] = boardId
 	board['threads'] = threads
 	board['userSettings'] = getBoardUserSettings(boardId, currentUserId)
@@ -398,7 +409,6 @@ def getAllPublicBoardsPreview():
 def getIndexPageInfoForUser(userId):
 	boardList  = set(globalDatabase.getPublicBoardList())
 	boardList |= set(userDatabase.getAdminBoards(userId))
-	boardList |= set(userDatabase.getModBoards(userId))
 	boardList |= set(userDatabase.getPrivateBoards(userId))
 	
 	return getAllBoardsPreview(boardList, userId)

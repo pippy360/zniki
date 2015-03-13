@@ -23,6 +23,23 @@
   width: 100px;
   float: left;
 }
+.settingsDivArea{
+  margin: 20px;
+  margin-left: 0;
+  display: block;
+}
+.fileUploadInput{
+  float: left;
+  margin-top: 20px;
+}
+.fileUploadSubmit{
+  margin-top: 20px;
+  background-color: #ddd;
+  border: 1px solid gray;
+}
+.fileUploadForm{
+  margin-bottom: 30px;
+}
     </style>
 {% endblock %}
 
@@ -96,25 +113,29 @@
       <div role="tabpanel" class="tab-pane" id="settings">
       {% endif %}
         <div>
-          <div>
+          <div class="settingsDivArea">
+            <h3>Change Profile Picture</h3>
+            {% if current_user.hasProfilePic %}
+              <img src="/thumb?height=250&width=250&fileId={{current_user.profilePicFileId}}" >
+            {% else %}
+              None
+            {% endif %}
+            <form action="/changeUserProfilePicSubmit" method="post"  enctype="multipart/form-data" class="fileUploadForm">
+              <input class="fileUploadInput" name="profilePic" type="file">
+              <input class="submitButton fileUploadSubmit" type="submit">
+            </form>
+          </div>
+          <div class="settingsDivArea">
             <a href="/changeUsername">Change Username</a>
-            <br>
-            <br>
           </div>
-          <div>
+          <div class="settingsDivArea">
             <a href="/changeEmail">Change Email</a>
-            <br>
-            <br>
           </div>
-          <div>
+          <div class="settingsDivArea">
             <a href="/deleteAccount">Delete Account</a>
-            <br>
-            <br>
           </div>
-          <div>
+          <div class="settingsDivArea">
             <a href="/changePassword">Change Password</a>
-            <br>
-            <br>
           </div>
         </div> 
       </div>

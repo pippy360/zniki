@@ -1,16 +1,16 @@
-function generateChatHTML(idName, partnerName, partialResponse, boardId, postId) {
+function generateChatHTML(idName, titleText, partialResponse, boardId, postId) {
 	//TODO: have a link or something instead
 	var about = "about post " + postId + " at board " + boardId;
 
 	return '' +
 	'<li id="' + idName + '"><div class="chat-container">' + 
-	'  <div class="chat-errors></div>' +
-	'  <div class="chat-header"><span>Chat with ' + partnerName + '</span><span class="chat-close-button"><a>close</a></span>' + 
+	'  <div class="chat-errors"></div>' +
+	'  <div class="chat-header"><span class="chat-header-title">' + titleText + '</span><span class="chat-close-button"><a>close</a></span>' + 
 	'    <span class="chat-header-about"></br>' + about + '</span>' +
 	'  </div>' +
-	'  <div class="chat-log"></div>' +
-	'  <div class="chat-status"></div>' +
-	'  <textarea class="chat-text-input">' + partialResponse + '</textarea>' +
+	'  <div class="chat-log" style="display: none;"></div>' + //!! initially hidden
+	'  <div class="chat-status" style="display: none;"></div>' + //!! initially hidden
+	'  <textarea class="chat-text-input" style="display: none;">' + partialResponse + '</textarea>' + //!! initially hidden
 	'</div></li>';
 }
 
@@ -65,7 +65,12 @@ function ChatLogic(elem, chatId, partnerName, boardId, postId, initialMode) {
 	var closeButton = this.elem.find(".chat-close-button > a");
 	closeButton.click(function(ev) {
 		logicThis.logMessage("user requested we close");
-		logicThis.endChat("user requested");
+		if (logicThis.mode == "active") {
+			logicThis.endChat("user requested");
+		}
+		else {
+			logicThis.die("", 0);
+		}
 	});
 }
 
@@ -141,7 +146,6 @@ ChatLogic.prototype.flash = function(color) {
 	var original = this.elem.css("backgroundColor");
 	var elem = this.elem;
 	elem.show();
-	$('#chat-list').show();
 
 	elem.animate({backgroundColor: color}, 300).animate({backgroundColor: original}, 300);
 }
@@ -246,15 +250,13 @@ function handleChatUpdates(data) {
 
 			//create chat UI
 			var newChatId = "chat-" + chatId;
-			var newChatHTML = generateChatHTML(newChatId, info['partnerName'], "", info['boardId'], info['postId']);
+			var newChatHTML = generateChatHTML(newChatId, "Chat with " + info['partnerName'], "", info['boardId'], info['postId']);
 			chatList.append(newChatHTML);
 
 			var elem = $('#' + newChatId);
 			var logic = new ChatLogic(elem, chatId, info['partnerName'], info['boardId'], info['postId'], "active");
 			elem.data("logic", logic);
 			logic.flashRed();
-
-			chatList.show(); //@@
 		}
 		else {
 			delete endedChats[chatId];
@@ -366,11 +368,10 @@ function chatPoll(timeout, again) {
 
 function beginChat(boardId, postId, partnerName) {
 	var chatList = $("#chat-list");
-	chatList.show();
 
 	//first make sure the chat about this board/post doesn't already exist
 	var existingLogic = null;
-	chatList.each(function() {
+	chatList.children().each(function() {
 		var logic = $(this).data("logic");
 		if (logic.boardId == boardId && logic.postId == postId) {
 			existingLogic = logic;
@@ -386,17 +387,16 @@ function beginChat(boardId, postId, partnerName) {
 
 	//initialize html
 	var elemId = 'chat-new-' + chatList.children().length;
-	var listItemHTML = generateChatHTML(elemId, partnerName, "", boardId, postId);
+	var listItemHTML = generateChatHTML(elemId, "Starting chat with " + partnerName, "", boardId, postId);
 	chatList.append(listItemHTML);
 
 	var listItem = $("#" + elemId);
 	var chatLogicInst = new ChatLogic(listItem, "-1", partnerName, boardId, postId, "starting");
 	listItem.data("logic", chatLogicInst);
 
-	//only show the header until the chats is legitimized
+	//add a spinner
 	var header = listItem.find(".chat-header");
-	header.find("span:first").text("Starting chat with " + partnerName);
-	header.nextAll().hide();
+	header.find(".chat-header-title").before('<span class="fa fa-refresh fa-spin"> </span>');
 
 	$.ajax("/chatBegin", {
 		type: "POST",
@@ -414,7 +414,9 @@ function beginChat(boardId, postId, partnerName) {
 			chatLogicInst.mode = "active";
 
 			//change header reveal the rest of the chat elements
-			header.find("span:first").text("Chat with " + partnerName);
+			header.find(".chat-header-title").text("Chat with " + partnerName);
+			header.find(".fa-spin").remove();
+
 			header.nextAll().show();
 			chatLogicInst.flashGreen();
 			chatLogicInst.entryElem.focus();
@@ -424,56 +426,69 @@ function beginChat(boardId, postId, partnerName) {
 
 			//rename li element for easier selection
 			this.attr("id", "chat-" + data['chatId']);
-			this.fadeTo(0, 1);
 		},
 		error: function(jqXHR, status, err) {
+			chatLogicInst.mode = "failed";
+
 			chatLogicInst.logMessage("begin chat: " + status + '; ' + err);
 			chatLogicInst.die("failed to begin chat", 5);
 
-			//TODO: retry maybe
+			if (status == "timeout") {
+				//TODO: retry maybe
+			}
+			else if (status == "FORBIDDEN") { //403
+
+			}
 		}
 	});
 }
 
 $(document).ready(function() {
 	//enable chat functionality
-	$('#chat-panel').show(); //TODO: might keep this hidden (and hide it later on) if there are no active chats
-	$('#chat-list').hide();
 
-	$('#chat-toggle').click(function() {
-		var container = $('#chat-list');
-		if (!container.is(":visible")) {
-			if (container.children().length > 0) {
-				container.show();
-			}
+	//enable the chat initiaion links that start off as hidden
+	$('a.chat-init-link').each(function(index, elem) {
+		var link = $(this);
+		link.show();
+
+		//expect to find the post id and poster name encoded in the href attr
+		var data = link.attr("href").match(/^(\d+)\|(.*)$/);
+		if (data) {
+			link.attr("href", "");
+			var postId = data[1];
+			var postUser = data[2];
+
+			link.click(function(ev) {
+				ev.preventDefault(); //don't reload the page
+				beginChat($BOARD_ID, postId, postUser); //$BOARD_ID should be set by a little script from thread.html
+			});
 		}
 		else {
-			container.hide();
+			console.warn("chat link does not contain post id in href");
+			link.click(function(ev) {
+				ev.preventDefault(); //don't reload the page
+			});
 		}
 	});
 
-	//decorate each post header with a chat initiation link
-	$('div .postHeader').each(function(index, elem) {
-		var t = $(this);
-		var postUserSpan = t.find(".postHeaderUsername");
-		var postIdSpan = t.find(".postHeaderPostId");
-
-		var postUser = postUserSpan.text().match(/^([^ ]+)/)[1];
-		var postId = postIdSpan.text().match(/(\d+)/)[1];
-
-		var chatLink = $(document.createElement('a'));
-		chatLink.html("chat");
-		chatLink.attr("href", "");
-		chatLink.attr("title", "chat with " + postUser + " about this post");
-		t.append(chatLink);
-
-		chatLink.click(function(ev) {
-			ev.preventDefault(); //don't reload the page
-			beginChat($BOARD_ID, postId, postUser); //$BOARD_ID should be set by a little script from thread.html
-		});
-	});
-
-	//$CHAT_POLL_INTERVAL_ID = window.setInterval(1500, chatPoll);
-	//poll for now
-	chatPoll(1000, true);
+	try {
+		var socket = new WebSocket("ws://" + window.location.host + "/chatStream");
+		socket.onmessage = function(ev) {
+			console.log("web socket data");
+			handleChatUpdates(ev.data);
+		}
+		socket.onopen = function(ev) {
+			console.log("opened web socket");
+		}
+		socket.onerror = function(ev) {
+			console.log("web socket error");
+		}
+		socket.onclose = function(ev) {
+			console.log("web socket closed");
+		}
+	}
+	catch(e) {
+		console.log("no web socket support, will use polling instead");
+		//chatPoll(1000, true);
+	}
 });

@@ -28,11 +28,6 @@ import random
 #say, when a user logs in on a different computer/browser/clears their offline data,
 #the entire (recent) chat history must be downloaded
 
-#TODO:
-#in a situation where a client failed to send
-#it might be possible to have a client insert a message back to the past
-#if the other participant did not already receive the message
-
 class Chat:
 	chats = {} #chatId -> Chat
 	byUser = {} #userId -> [Chat] the user is a participant of

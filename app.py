@@ -2,14 +2,14 @@ from database import databaseFunctions
 import redis
 import filesAPI
 import thumbnailGenerator
-from flask import Flask, render_template, request, send_file, redirect, url_for, abort, jsonify
+from flask import Flask, Response, render_template, request, send_file, redirect, url_for, abort, jsonify
 from flask.ext import login
 import loginLogic
 import utils
 import chat
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '8pp3dStringb38rb'
+app.config['SECRET_KEY'] = '8pp3d'
 
 
 #postRedisDB = redis.StrictRedis( '127.0.0.1', 6379 )
@@ -56,91 +56,23 @@ def showIndex():
 
 	return render_template("index.html", errors=errors, boardList=boardList)
 
-@app.route("/board/<boardId>/thread/<threadId>")
-@app.route("/board/<boardId>/thread/<threadId>/")
-def showThread(threadId,boardId,errors=[]):
-	if request.args.get('error') != None:
-		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
+#TODO: remove
+#@app.route('/baseLayoutTest')
+#def baseTest():
+#	return render_template("baseLayout.html",
+#		errors=[{'message':'something here', 'class':'bg-danger'}])
 
-	thread = databaseFunctions.getThread(boardId, threadId)
+@app.route('/thumb')
+def thumb():
+	return thumbnailGenerator.handleThumbnailRequest(request)
 
-	if login.current_user.is_authenticated():
-		userSettings = databaseFunctions.getBoardUserSettings(boardId, login.current_user.get_id())
-	else: 
-		userSettings = databaseFunctions.getBoardUserSettings(boardId, None)
-
-	if thread == None:
-		return redirect('/?error=Error: Thread doesn\'t exist.')
-	boardName = databaseFunctions.getBoardName(boardId)
-	return render_template("thread.html", userSettings=userSettings, boardName=boardName, boardId=boardId, 
-							thread=thread, threadId=threadId,errors=errors)
-
-@app.route("/board/<boardId>/thread/<threadId>/post", methods=['POST'])
-def post(boardId, threadId):
-	comment = request.form.get('postContent')
-	if comment or (len(request.files) > 0 and request.files.get('photo') != None 
-			and request.files.get('photo').filename != ''):
-
-		status = utils.isValidThreadComment(comment)
-		if not status['isValid']:
-			return redirect('/boardId/'+boardId+'/thread/'+threadId+
-				'?error=Error: '+status['reason'])
-
-		if login.current_user.is_authenticated():
-			creatorId = login.current_user.userId;
-		else:
-			creatorId = None
-
-		if (len(request.files) > 0 and request.files.get('photo') != None 
-				and request.files.get('photo').filename != ''):
-			status = filesAPI.handleUploadFormSubmit(request.files)
-			if not status['isValid']:
-				return redirect('/thread/'+threadId+'?error='+status['reason'])
-
-			fileId = databaseFunctions.addFileToDatabase(status['fileInfo'], "192.0.0.1")
-			databaseFunctions.createPost(boardId, threadId, 
-										comment, fileId, creatorId=creatorId)
-		else:
-			databaseFunctions.createPost(boardId, threadId, 
-										comment, creatorId=creatorId)
-
-		return redirect('/board/'+boardId+'/thread/'+threadId)
-	else:
-		return redirect('/board/'+boardId+'/thread/'+threadId+'?error=Error: Comment was empty.')
-
-@app.route('/<boardId>/threadSubmit', methods=['POST'])
-def threadSubmitPage(boardId):
-	threadId = ''
-	subject = request.form.get('subject')
-	comment = request.form.get('comment')
-	if subject != None and comment != None and request.files.get('photo') != None:
-		
-		if request.files.get('photo').filename == '':
-			return redirect('/'+boardId+'/createNewConv?error=Error: No file uploaded.')
-
-		status = utils.isValidThreadSubject(subject)
-		if not status['isValid']:
-			return redirect('/'+boardId+'/createNewConv?error=Error: '+status['reason'])
-
-		status = utils.isValidThreadComment(comment)
-		if not status['isValid']:
-			return redirect('/'+boardId+'/createNewConv?error=Error: '+status['reason'])
-
-		status = filesAPI.handleUploadFormSubmit(request.files)
-		if not status['isValid']:
-			return redirect('/'+boardId+'/createNewConv?error='+status['reason'])
-
-		if login.current_user.is_authenticated():
-			creatorId = login.current_user.userId
-		else:
-			creatorId = None
-
-		fileId = databaseFunctions.addFileToDatabase(status['fileInfo'], "192.0.0.1")
-		threadId = databaseFunctions.createThread(boardId, subject, 
-												comment, fileId, creatorId=creatorId)
-		return redirect('/')
-	else:
-		return redirect('/')#pass it here and pass on an error message
+ #####                              
+#     # #####   ####  #    # #####  
+#       #    # #    # #    # #    # 
+#  #### #    # #    # #    # #    # 
+#     # #####  #    # #    # #####  
+#     # #   #  #    # #    # #      
+ #####  #    #  ####   ####  #      
 
 @app.route('/createNewGroup')
 @login.login_required
@@ -165,8 +97,11 @@ def createNewGroupSubmitPage():
 @app.route('/<boardId>/addUsersSubmit', methods=['POST'])
 @login.login_required
 def addUsersSubmitPage(boardId):
-	newUser = request.form.get("input_newUser")
-	
+	#check if the user is a part of this board
+	if not utils.canAddUser(login.current_user, boardId):
+		return redirect('/?error=Error: You do not have permission to add users')
+
+	newUser = request.form.get("input_newUser")	
 	if newUser == None or newUser == '':
 		return redirect('/'+boardId+'/settings?error=Error: Invalid username or email address ')
 
@@ -174,25 +109,32 @@ def addUsersSubmitPage(boardId):
 	newUserId = databaseFunctions.getUserIdFromIdString(newUser)
 	if newUserId == None:
 		return redirect('/'+boardId+'/settings?error=Error: The username "'+newUser+'" didn\'t match any users')
+	elif newUserId == login.current_user.get_id():
+		return redirect('/'+boardId+'/settings?error=Error: You can\'t add yourself')
 
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
 	if boardInfo == None:
 		return redirect('/'+boardId+'/settings?error=Error: Invalid board Id')
-
-	if (login.current_user.userId == boardInfo['adminId'] 
-			or login.current_user.userId in boardInfo['modsList']):
-		if boardInfo['isPrivate'] == 'True':
-			databaseFunctions.addUserToBoard(newUserId, boardId)
-			return redirect('/'+boardId+'/settings?success=Success: user added')
-		else:
-			return redirect('/'+boardId+'/settings?error=Error: Not a private board')
+	elif newUserId == boardInfo['adminId']:
+		return redirect('/'+boardId+'/settings?error=Error: You can\'t add the admin as a user') 
+	elif newUserId in boardInfo['usersList']: 
+		return redirect('/'+boardId+'/settings?error=Error: '+newUser+' is already a member of this group')
+	
+	if boardInfo['isPrivate'] == 'True':
+		databaseFunctions.addUserToBoard(newUserId, boardId)
+		return redirect('/'+boardId+'/settings?success=Success: user added')
 	else:
-		return redirect('/'+boardId+'/settings?error=Error: You are not an Admin or Mod of this board')
+		return redirect('/'+boardId+'/settings?error=Error: Not a private board')
 
 	return redirect('/')
 
 @app.route('/<boardId>/addModsSubmit', methods=['POST'])
+@login.login_required
 def addModsSubmitPage(boardId):
+	#check if the user is a part of this board
+	if not utils.isAdmin(login.current_user, boardId):
+		return redirect('/?error=Error: You do not have permission to add users')
+
 	newMod = request.form.get("input_newMod")
 
 	if newMod == None or newMod == '':
@@ -202,122 +144,27 @@ def addModsSubmitPage(boardId):
 	newModId = databaseFunctions.getUserIdFromIdString(newMod)
 	if newModId == None:
 		return redirect('/'+boardId+'/settings?error=Error: The username "'+newMod+'" didn\'t match any users')
+	elif newModId == login.current_user.get_id():
+		return redirect('/'+boardId+'/settings?error=Error: you can\'t add yourself as a mod !')
 
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
 	if boardInfo == None:
 		return redirect('/'+boardId+'/settings?error=Error: Invalid board Id')
 
-	if login.current_user.get_id() == boardInfo['adminId'] :
-		databaseFunctions.addModToBoard(newModId, boardId)
-		return redirect('/'+boardId+'/settings?success=Success: mod added')
-	else:
-		return redirect('/'+boardId+'/settings?error=Error: You are not an admin of this board')
-
-	return redirect('/')
-
-@app.route('/<boardId>/createNewConv')
-def createNewConversationPage(boardId):
-	errors = []
-	if request.args.get('error') != None:
-		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
-	if request.args.get('success') != None:
-		errors = [{'message':request.args.get('success'),'class':'bg-success'}]
-
-	return render_template('createNewThread.html',boardId=boardId, errors=errors)
-
-#FIXME: thread submit is currently used instead of this
-#@app.route('/<boardId>/createNewConvSubmit')
-#def createNewConversationSubmitPage(boardId):
-#	return render_template('/')
-
-#TODO: remove
-@app.route('/baseLayoutTest')
-def baseTest():
-	return render_template("baseLayout.html",
-		errors=[{'message':'something here', 'class':'bg-danger'}])
-
-@app.route('/thumb')
-def thumb():
-	return thumbnailGenerator.handleThumbnailRequest(request)
-
-#FIXME: this function should not be in the databaseFunctions, it's a frontend thing
-def genPageButtons(boardId, pageNo):
-	#see how many buttons there shoud be and active the active one !
-	pages = getNumberOfPages(boardId)
-	result = []
-	for x in range(pages):
-		if int(x+1) == int(pageNo):
-			result.append({'number':str(x+1), 'active':str(True) })
-		else:
-			result.append({'number':str(x+1), 'active':str(False)})
-	return result
-
-def getNumberOfPages(boardId):
-	threadsNo = databaseFunctions.getBoardThreadCount(boardId)
-	pages = (threadsNo/threadsPerPage)
-	if threadsNo%threadsPerPage != 0:
-		pages += 1
-
-	return pages
-
-#FIXME: this function should MAYBE not be in the databaseFunctions, it's a frontend thing
-def getPagePreview(boardId, pageNo):
-	board = databaseFunctions.getBoardInfo(boardId)
-	board['threads'] = [] 
-	threadIdList = databaseFunctions.getBoardThreadListRange(boardId, 
-		(pageNo-1)*(threadsPerPage), (pageNo)*(threadsPerPage)-1)
-	for threadId in threadIdList:
-		board['threads'].append(getThreadPreview(boardId, threadId))
-
-	return board
-
-def getThreadPreview(boardId, threadId):
-	thread = databaseFunctions.getThreadInfo(boardId, threadId)
-	thread['posts'] = []
-	thread['posts'].extend( databaseFunctions.getPostsRange(boardId, threadId, 0, 0) )
-	thread['posts'].extend( databaseFunctions.getPostsRange(boardId, threadId, -5, -1) )
-
-	return thread
-
-@app.route('/board/<boardId>/thread/<threadId>/removePost/<postId>')
-@login.login_required
-def removePostPage(boardId, threadId, postId):
-	databaseFunctions.removePost(boardId, threadId, postId)
-	return redirect('/board/'+boardId+'/thread/'+threadId)
-
-@app.route('/board/<boardId>/thread/<threadId>/deleteThread')
-@login.login_required
-def deleteThread(boardId, threadId):
-	databaseFunctions.removeThread(boardId, threadId)
-	return redirect('/')
-
-#not used, using javascript instead
-##insert a <wbr></wbr> every n chars
-#def formatPosts(posts, every=64):
-#	for post in posts:
-#	    lines = []
-#	    for i in xrange(0, len(post['message']), every):
-#	        lines.append(post['message'][i:i+every])
-#	    post['message']= '<wbr></wbr>'.join(lines)
-#
-#	return posts
-
-
- #####                              
-#     # #####   ####  #    # #####  
-#       #    # #    # #    # #    # 
-#  #### #    # #    # #    # #    # 
-#     # #####  #    # #    # #####  
-#     # #   #  #    # #    # #      
- #####  #    #  ####   ####  #      
-
+	databaseFunctions.addModToBoard(newModId, boardId)
+	return redirect('/'+boardId+'/settings?success=Success: mod added')
 
 @app.route('/<boardId>/changeGroupNameSubmit', methods=['post'])
+@login.login_required
 def changeGroupNameSubmitPage(boardId):
+	#check if the user is a part of this board
+	if not utils.isAdmin(login.current_user, boardId):
+		return redirect('/?error=Error: You do not have permission to add users')
+
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
 	newName   = request.form.get('input_newName')
 
-	status = isValidGroupName(newName)
+	status = utils.isValidGroupName(newName)
 	if not status['isValid']:
 		return redirect('/'+boardId+'/settings?error=Error: '+status['reason'])
 
@@ -328,7 +175,12 @@ def changeGroupNameSubmitPage(boardId):
 		return redirect('/')
 
 @app.route('/<boardId>/changeGroupPasswordSubmit', methods=['post'])
+@login.login_required
 def changeGroupPasswordSubmitPage(boardId):
+	#check if the user is a part of this board
+	if not utils.isAdmin(login.current_user, boardId):
+		return redirect('/?error=Error: You do not have permission to add users')
+
 	boardInfo   = databaseFunctions.getBoardInfo(boardId)
 	newPassword = request.form.get('input_newPassword')
 	
@@ -345,6 +197,10 @@ def changeGroupPasswordSubmitPage(boardId):
 @app.route('/<boardId>/changeModPerms/<modId>', methods=['post'])
 @login.login_required
 def changeModPermsPage(boardId, modId,errors=[]):
+	#check if the user is a part of this board
+	if not utils.isAdmin(login.current_user, boardId):
+		return redirect('/?error=Error: You do not have permission to add users')
+
 	addUsers 	= request.form.get('addUsers', False)
 	kickUsers 	= request.form.get('kickUsers', False)
 	removePosts = request.form.get('removePosts', False)
@@ -355,6 +211,10 @@ def changeModPermsPage(boardId, modId,errors=[]):
 @app.route('/<boardId>/togglePrivate')
 @login.login_required
 def togglePrivatePage(boardId,errors=[]):
+	#check if the user is a part of this board
+	if not utils.isAdmin(login.current_user, boardId):
+		return redirect('/?error=Error: You do not have permission to add users')
+
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
 	if boardInfo['isPrivate'] == 'True':
 		databaseFunctions.makeBoardPublic(boardId)
@@ -365,6 +225,12 @@ def togglePrivatePage(boardId,errors=[]):
 @app.route('/<boardId>/settings')
 @login.login_required
 def settingsPage(boardId,errors=[]):
+	#check if the user is a part of this board
+	#NO NEED FOR THIS SECURITY CHECK, IT'S HANDLED BETTER BELOW
+	#if not utils.isAdmin(login.current_user, boardId) 
+	#		and not utils.isMod(login.current_user, boardId):
+	#	return redirect('/?error=Error: You do not have permission to add users')
+
 	if request.args.get('error') != None:
 		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
 	if request.args.get('success') != None:
@@ -395,23 +261,188 @@ def settingsPage(boardId,errors=[]):
 @app.route('/<boardId>/removeMod/<modId>')
 @login.login_required
 def removeModPage(boardId, modId,errors=[]):
+	#check if the user is a part of this board
+	if not utils.isAdmin(login.current_user, boardId):
+		return redirect('/?error=Error: You do not have permission to add users')
+
 	databaseFunctions.removeModFromBoard(boardId, modId)
 	return redirect('/'+boardId+'/settings?success=Success: Mod Removed')
 
 @app.route('/<boardId>/kickUser/<userId>')
 @login.login_required
 def kickUserPage(boardId, userId,errors=[]):
+	#check if the user is a part of this board
+	if not utils.canKickUser(login.current_user, boardId):
+		return redirect('/?error=Error: You do not have permission to add users')
+
+	boardInfo = databaseFunctions.getBoardInfo(boardId)
+	if login.current_user.get_id() != boardInfo['adminId'] and userId in boardInfo['modsList']:
+		return redirect('/'+boardId+'/settings?error=Error: You can\' remove a user who is also a mod')
+
 	databaseFunctions.removeUserFromBoard(boardId, userId)
 	return redirect('/'+boardId+'/settings?success=Success: User Kicked')
 
 @app.route('/<boardId>/deleteBoard')
 @login.login_required
 def deleteBoardPage(boardId):
+	#check if the user is a part of this board
+	if not utils.isAdmin(login.current_user, boardId):
+		return redirect('/?error=Error: You do not have permission to add users')
+
 	boardInfo = databaseFunctions.getBoardInfo(boardId)
 	if login.current_user.userId == boardInfo['adminId']:
 		databaseFunctions.removeBoard(boardId)
 	
 	return redirect('/')
+
+#######                                         
+   #     #    #  #####   ######    ##    #####  
+   #     #    #  #    #  #        #  #   #    # 
+   #     ######  #    #  #####   #    #  #    # 
+   #     #    #  #####   #       ######  #    # 
+   #     #    #  #   #   #       #    #  #    # 
+   #     #    #  #    #  ######  #    #  #####  
+
+
+@app.route('/<boardId>/createNewConv')
+def createNewConversationPage(boardId):
+	#check if the user is allowed to post to this board
+	if not utils.isUserInBoardUserList(login.current_user, boardId):
+		return redirect('/?error=Error: You do not have permission to view this page')
+
+	errors = []
+	if request.args.get('error') != None:
+		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
+	if request.args.get('success') != None:
+		errors = [{'message':request.args.get('success'),'class':'bg-success'}]
+
+	return render_template('createNewThread.html',boardId=boardId, errors=errors)
+
+@app.route('/board/<boardId>/thread/<threadId>/deleteThread')
+@login.login_required
+def deleteThread(boardId, threadId):
+	#check if the user is allowed to post to this board
+	if not utils.canRemovePost(login.current_user, boardId):
+		return redirect('/?error=Error: You do not have permission to view this page')
+
+	databaseFunctions.removeThread(boardId, threadId)
+	return redirect('/')
+
+@app.route('/<boardId>/threadSubmit', methods=['POST'])
+def threadSubmitPage(boardId):
+	#check if the user is a part of this board	
+	if not utils.isUserInBoardUserList(login.current_user, boardId):
+		return redirect('/?error=Error: You do not have permission to view this page')
+
+	threadId = ''
+	subject = request.form.get('subject')
+	comment = request.form.get('comment')
+
+	#check if the user is a part of this board	
+	if not utils.isUserInBoardUserList(login.current_user, boardId):
+		return redirect('/?error=Error: You do not have permission to view this page')
+
+	if subject != None and comment != None and request.files.get('photo') != None:
+		
+		if request.files.get('photo').filename == '':
+			return redirect('/'+boardId+'/createNewConv?error=Error: No file uploaded.')
+
+		status = utils.isValidThreadSubject(subject)
+		if not status['isValid']:
+			return redirect('/'+boardId+'/createNewConv?error=Error: '+status['reason'])
+
+		status = utils.isValidThreadComment(comment)
+		if not status['isValid']:
+			return redirect('/'+boardId+'/createNewConv?error=Error: '+status['reason'])
+
+		status = filesAPI.handleUploadFormSubmit(request.files['photo'])
+		if not status['isValid']:
+			return redirect('/'+boardId+'/createNewConv?error='+status['reason'])
+
+		if login.current_user.is_authenticated():
+			creatorId = login.current_user.userId
+		else:
+			creatorId = None
+
+		fileId = databaseFunctions.addFileToDatabase(status['fileInfo'], "192.0.0.1")
+		threadId = databaseFunctions.createThread(boardId, subject, 
+												comment, fileId, creatorId=creatorId)
+		return redirect('/')
+	else:
+		return redirect('/')#pass it here and pass on an error message
+
+
+@app.route("/board/<boardId>/thread/<threadId>")
+@app.route("/board/<boardId>/thread/<threadId>/")
+def showThreadPage(boardId, threadId, errors=[]):
+	#check if the user is a part of this board
+	thread = databaseFunctions.getThread(boardId, threadId)
+	if thread == None:
+		return redirect('/?error=Error: Thread doesn\'t exist.')
+
+	if not utils.isUserInBoardUserList(login.current_user, boardId):
+		return redirect('/?error=Error: You do not have permission to view this page')
+
+	if request.args.get('error') != None:
+		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
+
+
+	if login.current_user.is_authenticated():
+		userSettings = databaseFunctions.getBoardUserSettings(boardId, login.current_user.get_id())
+	else: 
+		userSettings = databaseFunctions.getBoardUserSettings(boardId, None)
+
+	boardName = databaseFunctions.getBoardName(boardId)
+	return render_template("thread.html", userSettings=userSettings, boardName=boardName, boardId=boardId, 
+							thread=thread, threadId=threadId,errors=errors)
+
+
+@app.route("/board/<boardId>/thread/<threadId>/post", methods=['POST'])
+def post(boardId, threadId):
+	#check if the user is a part of this board	
+	if not utils.isUserInBoardUserList(login.current_user, boardId):
+		return redirect('/?error=Error: You do not have permission to view this page')
+
+	comment = request.form.get('postContent')
+	if comment or (len(request.files) > 0 and request.files.get('photo') != None 
+			and request.files.get('photo').filename != ''):
+
+		status = utils.isValidThreadComment(comment)
+		if not status['isValid']:
+			return redirect('/boardId/'+boardId+'/thread/'+threadId+
+				'?error=Error: '+status['reason'])
+
+		if login.current_user.is_authenticated():
+			creatorId = login.current_user.userId;
+		else:
+			creatorId = None
+
+		if (len(request.files) > 0 and request.files.get('photo') != None 
+				and request.files.get('photo').filename != ''):
+			status = filesAPI.handleUploadFormSubmit(request.files['photo'])
+			if not status['isValid']:
+				return redirect('/thread/'+threadId+'?error='+status['reason'])
+
+			fileId = databaseFunctions.addFileToDatabase(status['fileInfo'], "192.0.0.1")
+			databaseFunctions.createPost(boardId, threadId, 
+										comment, fileId, creatorId=creatorId)
+		else:
+			databaseFunctions.createPost(boardId, threadId, 
+										comment, creatorId=creatorId)
+
+		return redirect('/board/'+boardId+'/thread/'+threadId)
+	else:
+		return redirect('/board/'+boardId+'/thread/'+threadId+'?error=Error: Comment was empty.')
+
+@app.route('/board/<boardId>/thread/<threadId>/removePost/<postId>')
+@login.login_required
+def removePostPage(boardId, threadId, postId):
+	#check if the user is allowed to post to this board
+	if not utils.canRemovePost(login.current_user, boardId):
+		return redirect('/?error=Error: You do not have permission to view this page')
+
+	databaseFunctions.removePost(boardId, threadId, postId)
+	return redirect('/board/'+boardId+'/thread/'+threadId)
 
 #     #   #####   #######  ######  
 #     #  #     #  #        #     # 
@@ -466,12 +497,13 @@ def signUpSubmitPage():
 	if not status['isValid']:
 		return redirect('/login?error=Error: '+status['reason'])
 	
+	passwordHash = loginLogic.hashPassword(password1);
 	if not password1 == password2:
 		return redirect('/login?error=Error: Passwords did not match')
 	else:
 		email 	 = email.lower()#Emails are always stored as lowercase
 		username = username.lower()#Usernames are always stored as lowercase
-		returnCode = databaseFunctions.addUser(email, username, password1, 0)
+		returnCode = databaseFunctions.addUser(email, username, passwordHash, 0)
 		if returnCode == -1:
 			return redirect('/login?error=Error: Username Taken')
 		elif returnCode == -2:
@@ -500,7 +532,7 @@ def dashboardPage(errors=[]):
 @login.login_required
 def addFriendPage():
 	friendStringId = request.form.get('friendStringId')
-	if not (isValidUsername(friendStringId)['isValid'] or isValidEmail(friendStringId)['isValid']):
+	if friendStringId == None or friendStringId == '':
 		return redirect('/dashboard?friends=1&error=Error: Invalid Friend Id')
 
 	friendStringId = friendStringId.lower()
@@ -511,6 +543,8 @@ def addFriendPage():
 		return redirect('/dashboard?friends=1&error=Error: User Doesn\' exist')
 	elif returnCode == -2:
 		return redirect('/dashboard?friends=1&error=Error: That user is already your friend')
+	elif returnCode == -3:
+		return redirect('/dashboard?friends=1&error=Error: You can\'t add yourself silly!')
 	else:
 		return redirect('/dashboard?friends=1&error=Error: Something weird happened O_o')
 
@@ -588,8 +622,7 @@ def changePasswordSubmitPage():
 	status = utils.isValidPassword(newPassword1)
 	if status['isValid']:
 
-		oldPasswordHash = oldPassword;
-		if oldPasswordHash != login.current_user.passwordHash:#the old password
+		if loginLogic.checkUserPassword(login.current_user, oldPassword):
 			return redirect('/changePassword?error=Error: Wrong Old password.')
 		elif newPassword1 != newPassword2:
 			return redirect('/changePassword?error=Error: New Passwords didn\'t Match')
@@ -614,9 +647,31 @@ def leaveGroupPage(boardId):
 	databaseFunctions.removeUserFromBoard(boardId, login.current_user.get_id())
 	return redirect('/')
 
+@app.route('/changeUserProfilePicSubmit', methods=['POST'])
+@login.login_required
+def changeUserProfilePicSubmitPage():
+	if (len(request.files) > 0 and request.files.get('profilePic') != None 
+				and request.files.get('profilePic').filename != ''):
+
+		status = filesAPI.handleUploadFormSubmit(request.files['profilePic'])
+		if not status['isValid']:
+			return redirect('/dashboard?settings=1&error=Error: Invalid File')
+
+		fileId = databaseFunctions.addFileToDatabase(status['fileInfo'], "192.0.0.1")
+		databaseFunctions.changeUserProfilePic(login.current_user.get_id(), fileId)
+		return redirect('/dashboard?settings=1')
+	else:
+		return redirect('/dashboard?settings=1')
 
 
-#chat
+ #####   #     #    ###    #######
+#     #  #     #   #   #      #
+#        #     #  #     #     # 
+#        #######  #######     # 
+#        #     #  #     #     # 
+#     #  #     #  #     #     # 
+ #####   #     #  #     #     # 
+
 @app.route('/chatBegin', methods=['POST']) #ajax
 @login.login_required
 def chatBegin():
@@ -726,34 +781,35 @@ def chatPoll():
 		if chatInfo.state > 0 or userId == chatInfo.fromId:
 			#this check exists so that a poster is not immediately told of a new chat,
 			#before the initiator has typed the first reply
-			updates[chatId] = {
-				'boardId': chatInfo.boardId,
-				'postId': chatInfo.postId,
-				'partnerName': otherName,
+			update = {
 				'updates': chat.getUpdates(chatId, userId, clientState)
 			}
 
-	#TODO: check if user is trying to get updates for chats they're not part of
-	#if chat.isUserInChat(userId, chatId):
+			if not chadId in clientStates:
+				update['boardId'] = chatInfo.boardId
+				update['postId'] = chatInfo.postId
+				update['partnerName'] = otherName
+
+			updates[chatId] = update
 	
 	#TODO: tell the client somehow when a chat has ended, why it has ended
 
 	print 'returning', updates
 	return jsonify(**updates)
 
-# @app.route('/chatStream', methods=['POST']) #web socket
-# @login.login_required
-# def chatPost():
-#   if json == None:
-# 	  abort(500) #we are expecting "application/json"
-#   print 'begin-chat request, json:', json
-# 
-# 	userId = login.current_user.userId
-# 	chatId = request.form.get('chatId')
-# 	clientState = request.form.get('state')
+def chatEventStream(userId):
+	#MUCH TODO
+	x = range(5)
+	for i in x:
+		yield str(i)
 
-# 	#return flask.Response(event_stream(), mimetype="text/event-stream")
+@app.route('/chatStream', methods=['GET']) #web socket
+@login.login_required
+def chatStream():
+	#TODO: ensure we actually got a web socket request and abort otherwise
 
+	userId = login.current_user.userId
+	return Response(chatEventStream(userId), mimetype="text/event-stream")
 
 
 def init_login():

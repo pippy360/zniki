@@ -1,11 +1,12 @@
 from flask import Flask
 from flask.ext import login
 from database import databaseFunctions
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(object):
 
-	def __init__(self, userId, isActive, is_authenticated, 
-					isAdmin, username, email, passwordHash, reputation):
+	def __init__(self, userId, isActive, is_authenticated, isAdmin, username,
+				 email, passwordHash, reputation, profilePicFileId, hasProfilePic):
 		self.userId 		= userId
 		self.isActiveVar 	= isActive
 		self.isAuthenticated = is_authenticated
@@ -14,6 +15,8 @@ class User(object):
 		self.email			= email
 		self.passwordHash	= passwordHash
 		self.reputation		= reputation
+		self.profilePicFileId = profilePicFileId
+		self.hasProfilePic = hasProfilePic
 
 	def is_authenticated(self):
 		return True
@@ -39,9 +42,13 @@ def getUserFromId(userId):
 	#print 'userData'
 	#print userData
 
+	hasProfilePic = userData.get('hasProfilePic')
+	profilePicFileId = userData.get('profilePicFileId')
+	hasProfilePic = (hasProfilePic == 'True')
+
 	return User(userId, 1, False, userData.get('isAdmin'), 
 				userData['username'], userData['email'], userData['passwordHash'],
-				userData['reputation'] )
+				userData['reputation'], profilePicFileId, hasProfilePic )
 
 
 #userStringId can be username or email 
@@ -68,9 +75,7 @@ def loginUser(userStringId, password):
 		status['reason'] = 'Error: You registration has not been accepted yet.'
 		return status
 
-	hashedPassword = password#plain text
-
-	if not hashedPassword == tempUser.passwordHash:
+	if not checkUserPassword(tempUser, password):
 		status['reason'] = 'Error: Wrong password.'
 		return status
 
@@ -80,3 +85,8 @@ def loginUser(userStringId, password):
 	status['isValid'] = True
 	return status
 
+def hashPassword(password):
+	return generate_password_hash(password)
+
+def checkUserPassword(userObj, passwordStr):
+	return  check_password_hash(userObj.passwordHash, passwordStr)
