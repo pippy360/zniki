@@ -142,8 +142,11 @@ def isValidUsername(username):
 def isValidPassword(password):
 	if password == None:
 		return {'isValid':False, 'reason':'Invalid Password'}
+	try:
+		password = str(password)
+	except:
+		return {'isValid':False, 'reason':'Invalid characters used'}
 
-	password = str(password)
 	if len(password) > MAX_PASSWORD_SIZE:
 		return {'isValid':False, 'reason':'Password was more than '+str(MAX_PASSWORD_SIZE)+' characters'}
 
@@ -158,7 +161,7 @@ def isValidPassword(password):
 #
 #Groups and threads
 #
-MAX_GROUP_NAME_SIZE = 60
+MAX_GROUP_NAME_SIZE = 10
 MIN_GROUP_NAME_SIZE = 4
 MAX_SUBJECT_SIZE = 60
 MIN_SUBJECT_SIZE = 4
@@ -168,13 +171,17 @@ MIN_COMMENT_SIZE = 1
 def isValidGroupName(groupName):
 	if groupName == None:
 		return {'isValid':False, 'reason':'Invalid Group Name'}
+	try:
+		groupName = str(groupName)
+	except:
+		return {'isValid':False, 'reason':'Invalid characters used'}
 
-	groupName = str(groupName)
-	if len(groupName) > MAX_GROUP_NAME_SIZE:
+	if (len(groupName) - groupName.count(' ')) > MAX_GROUP_NAME_SIZE:
 		return {'isValid':False, 'reason':'Group name was more than '+str(MAX_GROUP_NAME_SIZE)+' characters'}
 
-	if len(groupName) < MIN_GROUP_NAME_SIZE:
+	if (len(groupName) - groupName.count(' ')) < MIN_GROUP_NAME_SIZE:
 		return {'isValid':False, 'reason':'Group name was lass than '+str(MIN_GROUP_NAME_SIZE)+' characters'}
+
 
 	if re.match(r'[A-Za-z0-9@#$%^&+= ]{3,}', groupName) != None:
 		return {'isValid':True, 'reason':''}
@@ -184,8 +191,11 @@ def isValidGroupName(groupName):
 def isValidThreadSubject(subject):
 	if subject == None:
 		return {'isValid':False, 'reason':'Invalid Subject'}
+	try:
+		subject = str(subject)
+	except:
+		return {'isValid':False, 'reason':'Invalid characters used'}
 
-	subject = str(subject)
 	if len(subject) > MAX_SUBJECT_SIZE:
 		return {'isValid':False, 'reason':'Subject was more than '+str(MAX_SUBJECT_SIZE)+' characters'}
 
@@ -200,8 +210,11 @@ def isValidThreadSubject(subject):
 def isValidThreadComment(comment):
 	if comment == None:
 		return {'isValid':False, 'reason':'Invalid Comment'}
+	try:
+		comment = str(comment)
+	except:
+		return {'isValid':False, 'reason':'Invalid characters used'}
 
-	comment = str(comment)
 	if len(comment) > MAX_COMMENT_SIZE:
 		return {'isValid':False, 'reason':'Comment was more than '+str(MAX_COMMENT_SIZE)+' characters'}
 
@@ -209,3 +222,4 @@ def isValidThreadComment(comment):
 		return {'isValid':False, 'reason':'Comment was lass than '+str(MIN_COMMENT_SIZE)+' characters'}
 
 	return {'isValid':True, 'reason':''}
+

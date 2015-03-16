@@ -7,7 +7,7 @@ from flask.ext import login
 import loginLogic
 import utils
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '8pp3d'
+app.config['SECRET_KEY'] = '8p3234p3d'
 
 
 #postRedisDB = redis.StrictRedis( '127.0.0.1', 6379 )
@@ -75,7 +75,13 @@ def thumb():
 @app.route('/createNewGroup')
 @login.login_required
 def createNewGroupPage():
-	return render_template('createNewGroup.html')
+	errors = []
+	if request.args.get('error') != None:
+		errors = [{'message':request.args.get('error'),'class':'bg-danger'}]
+	if request.args.get('success') != None:
+		errors = [{'message':request.args.get('success'),'class':'bg-success'}]
+	
+	return render_template('createNewGroup.html', errors=errors)
 
 @app.route('/createNewGroupSubmit', methods=['POST'])
 @login.login_required
