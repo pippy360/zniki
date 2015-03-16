@@ -797,19 +797,21 @@ def chatPoll():
 	print 'returning', updates
 	return jsonify(**updates)
 
-def chatEventStream(userId):
-	#MUCH TODO
-	x = range(5)
-	for i in x:
-		yield str(i)
 
-@app.route('/chatStream', methods=['GET']) #web socket
-@login.login_required
-def chatStream():
-	#TODO: ensure we actually got a web socket request and abort otherwise
+#This is meant to be a web-socket based alternative to the polling method above
+# def chatEventStream(userId):
+# 	#MUCH TODO
+# 	x = range(5)
+# 	for i in x:
+# 		yield str(i)
 
-	userId = login.current_user.userId
-	return Response(chatEventStream(userId), mimetype="text/event-stream")
+# @app.route('/chatStream', methods=['GET']) #web socket
+# @login.login_required
+# def chatStream():
+# 	#TODO: ensure we actually got a web socket request and abort otherwise
+
+# 	userId = login.current_user.userId
+# 	return Response(chatEventStream(userId), mimetype="text/event-stream")
 
 
 def init_login():

@@ -78,6 +78,25 @@ ChatLogic.prototype.logMessage = function(str) {
 	console.log('chat id ' + this.chatId + ', with ' + this.partnerName + ', on board ' + this.boardId + ', about post ' + this.postId + ' -> ' + str);
 }
 
+ChatLogic.prototype.storeLocally = function() {
+	if (this.mode == "active") {
+		var cookie = {
+			partnerName: this.partnerName,
+			partialResponse: this.entryElem.val(),
+			boardId: this.boardId,
+			postId: this.postId,
+			log: {}
+		};
+
+		logElem.logElem.each( function(index, elem) {
+			var t = $(this);
+			cookie.log[t.attr("id")] = t.find(".chat-log-text").text();
+		});
+
+		$.cookie("chat-" + this.chatId, cookie);
+	}
+}
+
 ChatLogic.prototype.postMessage = function(text, div, timeout) {
 	$.ajax("/chatPost", {
 		type: "POST",
@@ -444,6 +463,8 @@ function beginChat(boardId, postId, partnerName) {
 }
 
 $(document).ready(function() {
+	$.cookie.json = true;
+
 	//enable chat functionality
 
 	//enable the chat initiaion links that start off as hidden
@@ -471,7 +492,32 @@ $(document).ready(function() {
 		}
 	});
 
-	try {
+	//recreate old chats
+	var storedCookies = $.cookie();
+	for (cookie in storedCookies) {
+		var match = cookie.match(/^chat-(\d+)$/);
+		if (match) {
+			var chatId = match[1];
+			var storedChat = storedCookies[cookie];
+
+			var elemId = 'chat-' + chatId;
+			var listItemHTML = generateChatHTML(elemId, "Chat with " + storedChat.partnerName, storedChat.partialResponse, storedChat.boardId, storedChat.postId);
+			$("#chat-list").append(listItemHTML);
+
+			var listItem = $("#" + elemId);
+			var chatLogicInst = new ChatLogic(listItem, chatId, storedChat.partnerName, storedChat.boardId, storedChat.postId, "active");
+			listItem.data("logic", chatLogicInst);
+
+			var replyList = listItem.find(".chat-log");
+			for (var state in storedChat.log) {
+				var html = generateReplyHTML(state, "todo", storedChat.log[state], false);
+				replyList.append(html);
+			}
+		}
+	}
+
+	//TODO: websocket
+	/*try {
 		var socket = new WebSocket("ws://" + window.location.host + "/chatStream");
 		socket.onmessage = function(ev) {
 			console.log("web socket data");
@@ -490,5 +536,8 @@ $(document).ready(function() {
 	catch(e) {
 		console.log("no web socket support, will use polling instead");
 		//chatPoll(1000, true);
-	}
+	}*/
+
+	//default to polling
+	chatPoll(1000, true);
 });

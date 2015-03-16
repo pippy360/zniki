@@ -2,31 +2,31 @@ from flask import Flask
 from database import databaseFunctions
 import random
 
-#TODO: redis backend
-#probably best to use the pub/sub system
-#since it is scalable
-
-
 #chats are tied to posts and involve two participants:
-#at some point in the past, the *poster* has made a post
-#the *initiator* sees the post and begins a chat instance with the poster,
-#about that specific post (and board)
+#at some point in the past, the *poster* has made a post (either the start of a new thread, or a reply)
+#the *initiator* sees the post and begins a chat instance with the poster, about that specific post (and board)
 
-#the chat instance has a state counter,
-#which is incremented on every reply
+#the chat instance gets an id
+#hence, each unique (boardId, postId, initiatorId) tuple is a unique chat, and can be identified by its corresponding chatId
+
+#the chat instance has a state counter, which is incremented on every reply
 
 #the server has the final say on the ordering of messages
 #so that if the client sent a message but it was not yet seen by the server
 #and the server got a reply from the other participant,
 #even if that reply was typed after the first one,
 #the newer reply will be recorded in the log as being received before the older one
-#(if the older one is every received)
+
+#however, this strict ordering is not enforced client side, since once a reply is typed, it will not be moved around
 
 #the clients maintain their own state counters, which represent that state of the local chat log
 #clients can request historical replies up to a point.
 
 #say, when a user logs in on a different computer/browser/clears their offline data,
 #the entire (recent) chat history must be downloaded
+
+#TODO: redis backend
+#probably best to use the pub/sub system since it is scalable
 
 class Chat:
 	chats = {} #chatId -> Chat
